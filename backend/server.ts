@@ -1,8 +1,8 @@
 // Bring in required modules and libraries
-const express = require('express');
-const cors = require('cors');
-const { Pool } = require('pg');
-const { MongoClient } = require('mongodb');
+import express, { json } from 'express';
+import cors from 'cors';
+import { Pool } from 'pg';
+import { MongoClient } from 'mongodb';
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -14,7 +14,7 @@ const PORT = process.env.PORT || 8081;
 // Here, we are using CORS to allow cross-origin requests and express.json() to parse JSON request bodies.
 // In simple terms its a kind of "gatekeeper" that processes incoming requests before they reach our route handlers.
 app.use(cors());
-app.use(express.json());
+app.use(json());
 
 // PostgreSQL Connection
 
@@ -43,7 +43,7 @@ let mongoDB;
 // MongoDB collections are created with less strictness, so we just ensure the sample data is present.
 // PostgreSQL requires explicit table creation.
 async function initializeDatabases() {
-try {
+	try {
 		// Initialize PostgreSQL table
 		await pgPool.query(`
 			CREATE TABLE IF NOT EXISTS users (
@@ -53,7 +53,7 @@ try {
 				created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 			)
 		`);
-    
+
 		// Insert sample data if table is empty
 		const result = await pgPool.query('SELECT COUNT(*) FROM users');
 		if (parseInt(result.rows[0].count) === 0) {
@@ -70,7 +70,7 @@ try {
 		mongoClient = new MongoClient(mongoUri);
 		await mongoClient.connect();
 		mongoDB = mongoClient.db();
-    
+
 		// Create sample collection and insert data if empty
 		const productsCollection = mongoDB.collection('products');
 		const count = await productsCollection.countDocuments();
@@ -97,7 +97,7 @@ app.get('/', (_, res) => {
 	res.json({
 		message: 'Welcome to the Full-Stack Demo API',
 		endpoints: {
-            // Documentation of available endpoints for both databases
+			// Documentation of available endpoints for both databases
 			postgres: {
 				'GET /api/postgres/users': 'Get all users from PostgreSQL',
 				'POST /api/postgres/users': 'Create a new user in PostgreSQL',
@@ -166,8 +166,8 @@ app.post('/api/mongodb/products', async (req, res) => {
 			stock: parseInt(stock),
 			createdAt: new Date()
 		});
-		res.json({ 
-			success: true, 
+		res.json({
+			success: true,
 			data: { _id: result.insertedId, name, category, price, stock }
 		});
 	} catch (error) {
