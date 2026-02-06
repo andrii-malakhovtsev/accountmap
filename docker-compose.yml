@@ -1,0 +1,97 @@
+version: '3.8'
+
+# Define the services/containers
+
+###############################################################################################
+# The docker-compose.yml file sets up a multi-container Docker application                    #
+# with four services: PostgreSQL, MongoDB, Backend API, and Frontend React App.               #
+# Each service is defined with its image, environment variables, ports, volumes,              #   
+# and dependencies to ensure proper startup order.                                            #
+#                                                                                             #                       
+# Docker Compose is a tool for defining and running multi-container Docker applications.      #
+# With Compose, you use a YAML file to configure your application’s services.                 # 
+# Then, with a single command, you create and start all the services from your configuration. #
+###############################################################################################
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: demo-postgres
+    environment:
+      POSTGRES_USER: demouser
+      POSTGRES_PASSWORD: demopass
+      POSTGRES_DB: demodb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demouser"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: demo-mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: demouser
+      MONGO_INITDB_ROOT_PASSWORD: demopass
+      MONGO_INITDB_DATABASE: demodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: demo-backend
+    environment:
+      PORT: 8081
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: demouser
+      POSTGRES_PASSWORD: demopass
+      POSTGRES_DB: demodb
+      MONGODB_URI: mongodb://demouser:demopass@mongodb:27017/demodb?authSource=admin
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # Frontend React App
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: demo-frontend
+    environment:
+      REACT_APP_API_URL: http://localhost:8081
+    ports:
+      - "8080:3000"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    stdin_open: true
+    tty: true
+
+volumes:
+  postgres-data:
+  mongo-data:

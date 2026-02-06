@@ -1,0 +1,70 @@
+/* 
+		The Highest level of styling for the App component. Anything that is needed to be used
+		across the project for things like color schemes, fonts, and layout structure can be found here
+		and if anything else is needed it can be added here.
+*/
+
+.App {
+	max-width: 1400px;
+	margin: 0 auto;
+}
+
+.App-header {
+	background: white;
+	border-radius: 12px;
+	padding: 30px;
+	margin-bottom: 30px;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	text-align: center;
+}
+
+.App-header h1 {
+	color: #333;
+	margin-bottom: 10px;
+	font-size: 2.5rem;
+}
+
+.subtitle {
+	color: #666;
+	font-size: 1.1rem;
+	margin-bottom: 15px;
+}
+
+.status-badge {
+	display: inline-block;
+	padding: 8px 16px;
+	background: #f0f0f0;
+	border-radius: 20px;
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: #333;
+}
+
+.App-main {
+	margin-bottom: 30px;
+}
+
+.sections-container {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+	gap: 30px;
+}
+
+.App-footer {
+	background: white;
+	border-radius: 12px;
+	padding: 20px;
+	text-align: center;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+	color: #666;
+}
+
+@media (max-width: 768px) {
+	.sections-container {
+		grid-template-columns: 1fr;
+	}
+  
+	.App-header h1 {
+		font-size: 1.8rem;
+	}
+}
