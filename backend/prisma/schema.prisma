@@ -18,4 +18,28 @@ model User {
   email         String   @unique
   password_hash String
   created_at    DateTime @default(now())
+
+  accounts Account[]
+}
+
+model Account {
+  id       String  @id @default(uuid())
+  name     String // Cleaned via Regex (e.g., "NETFLIX", "CHASE")
+  username String? // The login handle used for this specific account
+  notes    String? // Your "Moving Story" notes/user-added data
+
+  user   User @relation(fields: [userid], references: [id])
+  userid Int
+
+  identities Identity[] // Relation to Identities
+  createdAt  DateTime   @default(now())
+}
+
+model Identity {
+  id    String @id @default(uuid())
+  value String // The actual information
+  type  String // "Type of Information Stored"
+
+  account   Account @relation(fields: [accountid], references: [id])
+  accountid String
 }
