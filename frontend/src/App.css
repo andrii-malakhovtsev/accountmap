@@ -1,70 +1,42 @@
-/* 
-		The Highest level of styling for the App component. Anything that is needed to be used
-		across the project for things like color schemes, fonts, and layout structure can be found here
-		and if anything else is needed it can be added here.
-*/
-
-.App {
-	max-width: 1400px;
-	margin: 0 auto;
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 }
 
-.App-header {
-	background: white;
-	border-radius: 12px;
-	padding: 30px;
-	margin-bottom: 30px;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	text-align: center;
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-.App-header h1 {
-	color: #333;
-	margin-bottom: 10px;
-	font-size: 2.5rem;
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.subtitle {
-	color: #666;
-	font-size: 1.1rem;
-	margin-bottom: 15px;
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
 }
 
-.status-badge {
-	display: inline-block;
-	padding: 8px 16px;
-	background: #f0f0f0;
-	border-radius: 20px;
-	font-size: 0.9rem;
-	font-weight: 500;
-	color: #333;
+.card {
+  padding: 2em;
 }
 
-.App-main {
-	margin-bottom: 30px;
-}
-
-.sections-container {
-	display: grid;
-	grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
-	gap: 30px;
-}
-
-.App-footer {
-	background: white;
-	border-radius: 12px;
-	padding: 20px;
-	text-align: center;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-	color: #666;
-}
-
-@media (max-width: 768px) {
-	.sections-container {
-		grid-template-columns: 1fr;
-	}
-  
-	.App-header h1 {
-		font-size: 1.8rem;
-	}
+.read-the-docs {
+  color: #888;
 }
