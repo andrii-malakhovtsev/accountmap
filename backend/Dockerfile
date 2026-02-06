@@ -1,17 +1,20 @@
-# To build this service, we are using a lightweight Node.js image based on Alpine Linux.
-# This keeps our image size small and efficient.
-
-# Then we install our dependencies and copy our application code into the container.
-
-FROM node:18-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
-COPY package*.json ./
+# Copy dependency files first (better caching)
+COPY package.json package-lock.json ./
 
 RUN npm install
 
+# Copy the rest of the source
 COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the app
+RUN npm run build
 
 EXPOSE 5000
 
