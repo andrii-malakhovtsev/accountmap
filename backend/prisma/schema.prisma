@@ -13,33 +13,51 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Categories {
+  GOOGLE
+}
+
+enum IdentityType {
+  MAIL
+  PHONE
+  AUTH
+}
+
 model User {
-  id            Int      @id
-  email         String   @unique
-  password_hash String
-  created_at    DateTime @default(now())
+  id       String @id @default(uuid())
+  email    String @unique
+  username String @unique
+  password String
 
   accounts Account[]
 }
 
 model Account {
-  id       String  @id @default(uuid())
-  name     String // Cleaned via Regex (e.g., "NETFLIX", "CHASE")
-  username String? // The login handle used for this specific account
-  notes    String? // Your "Moving Story" notes/user-added data
+  id         String       @id @default(uuid())
+  name       String // Cleaned via Regex (e.g., "NETFLIX", "CHASE")
+  username   String? // The login handle used for this specific account
+  notes      String? // Your "Moving Story" notes/user-added data
+  categories Categories[]
 
-  user   User @relation(fields: [userid], references: [id])
-  userid Int
+  user   User   @relation(fields: [userid], references: [id])
+  userid String
 
-  identities Identity[] // Relation to Identities
-  createdAt  DateTime   @default(now())
+  connections Connections[]
+}
+
+model Connections {
+  account    Account  @relation(fields: [accountId], references: [id])
+  identity   Identity @relation(fields: [identityId], references: [id])
+  accountId  String
+  identityId String
+
+  @@id([accountId, identityId])
 }
 
 model Identity {
-  id    String @id @default(uuid())
+  id    String       @id @default(uuid())
   value String // The actual information
-  type  String // "Type of Information Stored"
+  type  IdentityType // "Type of Information Stored"
 
-  account   Account @relation(fields: [accountid], references: [id])
-  accountid String
+  connections Connections[]
 }
