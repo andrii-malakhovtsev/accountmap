@@ -50,29 +50,29 @@ services:
       retries: 5
 
   # Backend API
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: demo-backend
-    environment:
-      PORT: 8081
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: demouser
-      POSTGRES_PASSWORD: demopass
-      POSTGRES_DB: demodb
-      MONGODB_URI: mongodb://demouser:demopass@mongodb:27017/demodb?authSource=admin
-    ports:
-      - "8081:8081"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      mongodb:
-        condition: service_healthy
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: demo-backend
+  #   environment:
+  #     PORT: 8081
+  #     POSTGRES_HOST: postgres
+  #     POSTGRES_PORT: 5432
+  #     POSTGRES_USER: demouser
+  #     POSTGRES_PASSWORD: demopass
+  #     POSTGRES_DB: demodb
+  #     MONGODB_URI: mongodb://demouser:demopass@mongodb:27017/demodb?authSource=admin
+  #   ports:
+  #     - "8081:8081"
+  #   depends_on:
+  #     postgres:
+  #       condition: service_healthy
+  #     mongodb:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./backend:/app
+  #     - /app/node_modules
 
   # Frontend React App
   frontend:
@@ -84,8 +84,8 @@ services:
       REACT_APP_API_URL: http://localhost:8081
     ports:
       - "8080:3000"
-    depends_on:
-      - backend
+    # depends_on:
+      # - backend
     volumes:
       - ./frontend:/app
       - /app/node_modules
