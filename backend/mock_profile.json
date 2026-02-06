@@ -1,0 +1,59 @@
+{
+	"user": [
+		{
+			"id": 0,
+			"username": "",
+			"email": "",
+			"password_hash": "",
+			"accounts": [
+				{
+					"id": "",
+					"name": "",
+					"username": "",
+					"notes": "",
+					"userid": 0,
+					"categories": "",
+					"identities": [
+						{
+							"id": "",
+							"accountid": "",
+							"type": "",
+							"value": ""
+						},
+
+						{
+							"id": "",
+							"accountid": "",
+							"type": "",
+							"value": ""
+						}
+					]
+				},
+
+				{
+					"id": "",
+					"name": "",
+					"username": "",
+					"notes": "",
+					"userid": 0,
+					"categories": "",
+					"identities": [
+						{
+							"id": "",
+							"accountid": "",
+							"type": "",
+							"value": ""
+						},
+
+						{
+							"id": "",
+							"accountid": "",
+							"type": "",
+							"value": ""
+						}
+					]
+				}
+			]
+		}
+	]
+}
