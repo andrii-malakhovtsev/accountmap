@@ -1,57 +1,58 @@
 import { create } from "zustand";
 
 const useSidebarStore = create((set) => ({
-  loading: false,
-  error: null,
-  success: false,
+	loading: false,
+	error: null,
+	success: false,
 
-  createAccount: async (accountData) => {
-    set({ loading: true, error: null, success: false });
-    try {
-      // Remove type from account data
-      const { type, value, ...dataWithoutType } = accountData;
-      const res = await fetch("http://localhost:8081/api/accounts/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(dataWithoutType),
-      });
+	createAccount: async (accountData) => {
+		set({ loading: true, error: null, success: false });
+		try {
+			// Remove type from account data
+			const { type, value, ...dataWithoutType } = accountData;
+			const res = await fetch("http://localhost:8081/api/accounts/add", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(dataWithoutType),
+			});
 
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+			if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-      const data = await res.json();
-      set({ loading: false, success: true });
-      return data;
-    } catch (err) {
-      set({ error: err.message || "Failed to create account", loading: false });
-      throw err;
-    }
-  },
+			const data = await res.json();
+			set({ loading: false, success: true });
+			return data;
+		} catch (err) {
+			set({ error: err.message || "Failed to create account", loading: false });
+			throw err;
+		}
+	},
 
-  createConnection: async (connectionData) => {
-    set({ loading: true, error: null, success: false });
-    try {
-      // Keep type for connection
-      const res = await fetch("http://localhost:8081/api/connections/add", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(connectionData),
-      });
+	createConnection: async (connectionData) => {
+		set({ loading: true, error: null, success: false });
+		try {
+			const { name, username, ...dataWithoutType } = connectionData;
+			// Keep type for connection
+			const res = await fetch("http://localhost:8081/api/identities/add", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(connectionData),
+			});
 
-      if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+			if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
-      const data = await res.json();
-      set({ loading: false, success: true });
-      return data;
-    } catch (err) {
-      set({
-        error: err.message || "Failed to create connection",
-        loading: false,
-      });
-      throw err;
-    }
-  },
+			const data = await res.json();
+			set({ loading: false, success: true });
+			return data;
+		} catch (err) {
+			set({
+				error: err.message || "Failed to create connection",
+				loading: false,
+			});
+			throw err;
+		}
+	},
 
-  resetState: () => set({ loading: false, error: null, success: false }),
+	resetState: () => set({ loading: false, error: null, success: false }),
 }));
 
 export default useSidebarStore;
