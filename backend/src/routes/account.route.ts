@@ -1,8 +1,205 @@
 import express from "express";
+import { Account, Identity } from "../../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { get_default_user } from "../lib/utils";
 
 const router = express.Router();
+
+router.get("/map", async (req: any, res: any) => {
+	try {
+		const user = await get_default_user();
+		if (!user) {
+			return res.status(500).json({ error: "Default user not found" });
+		}
+		const accounts = await prisma.account.findMany({
+			where: { userid: user.id },
+			include: {
+				connections: {
+					select: {
+						identity: true,
+					},
+				},
+			},
+		});
+		res.status(200);
+		return res.json(accounts);
+	} catch (error) {
+		console.error("Error fetching map accounts:", error);
+		return res.status(500).json({ error: "An error occurred while fetching accounts." });
+	}
+});
+
+type PostAccounts = Omit<Account, "id" | "userid"> & {
+	identities?: Omit<Identity, "id" | "userid">[];
+};
+
+async function get_or_create_identities(
+	userid: string,
+	identities: Omit<Identity, "id" | "userid">[] = [],
+) {
+	if (!identities.length) return [] as string[];
+
+	const promises = identities.map((identity) =>
+		prisma.identity.findFirst({
+			where: { userid, type: identity.type, value: identity.value },
+		}),
+	);
+	const completed = await Promise.all(promises);
+	const ids: string[] = [];
+	const need_creating: Omit<Identity, "id">[] = [];
+
+	for (let i = 0; i < completed.length; i++) {
+		const complete = completed[i];
+		if (complete) {
+			ids.push(complete.id);
+			continue;
+		}
+		need_creating.push({ ...identities[i], userid });
+	}
+
+	if (need_creating.length) {
+		const created_ids = await prisma.identity.createManyAndReturn({
+			data: need_creating,
+		});
+		created_ids.forEach((id) => ids.push(id.id));
+	}
+
+	return ids;
+}
+
+router.post("/add", async (req: any, res: any) => {
+	const body: PostAccounts = req.body;
+	if (!body || typeof body.name !== "string" || body.name.trim() === "") {
+		return res.status(400).json({ error: "Field 'name' is required." });
+	}
+	if (body.identities && !Array.isArray(body.identities)) {
+		return res.status(400).json({ error: "Field 'identities' must be an array." });
+	}
+
+	try {
+		const user = await get_default_user();
+		if (!user) {
+			return res.status(500).json({ error: "Default user not found" });
+		}
+		const userid = user.id;
+
+		const existingAccount = await prisma.account.findFirst({
+			where: {
+				userid,
+				name: body.name.trim(),
+				username: body.username ?? null,
+			},
+		});
+		if (existingAccount) {
+			return res.status(409).json({
+				error: "Account already exists",
+				account: existingAccount,
+			});
+		}
+
+		const identities = await get_or_create_identities(userid, body.identities ?? []);
+		const account = await prisma.account.create({
+			data: {
+				name: body.name.trim(),
+				username: body.username,
+				categories: body.categories,
+				notes: body.notes,
+				userid,
+			},
+		});
+		const connections = identities.map((identityId) => ({
+			accountId: account.id,
+			identityId,
+		}));
+		if (connections.length) {
+			await prisma.connections.createMany({ data: connections });
+		}
+
+		return res.status(201).json({ message: "Account Created Successfully", account });
+	} catch (error) {
+		console.error("Error creating account:", error);
+		return res.status(500).json({ error: "Error creating account" });
+	}
+});
+
+// PATCH /:id
+// Updates an account's fields (name, username, notes, categories)
+router.patch("/:id", async (req: any, res: any) => {
+	const accountId = req.params.id;
+	const { name, username, notes, categories } = req.body || {};
+
+	if (!accountId) return res.status(400).json({ message: "Missing account id in params" });
+	if (
+		name === undefined &&
+		username === undefined &&
+		notes === undefined &&
+		categories === undefined
+	)
+		return res.status(400).json({ message: "Provide at least one field to update" });
+
+	if (name !== undefined && typeof name !== "string")
+		return res.status(400).json({ message: "Field name must be a string" });
+	if (username !== undefined && username !== null && typeof username !== "string")
+		return res.status(400).json({ message: "Field username must be a string or null" });
+	if (notes !== undefined && notes !== null && typeof notes !== "string")
+		return res.status(400).json({ message: "Field notes must be a string or null" });
+	if (categories !== undefined && !Array.isArray(categories))
+		return res.status(400).json({ message: "Field categories must be an array" });
+
+	try {
+		const user = await get_default_user();
+		if (!user) return res.status(500).json({ message: "Default user not found" });
+
+		const existing = await prisma.account.findUnique({ where: { id: accountId } });
+		if (!existing) return res.status(404).json({ message: "Account not found" });
+		if (existing.userid !== user.id)
+			return res.status(403).json({ message: "Account ownership mismatch" });
+
+		const updateData: Partial<Account> = {};
+		if (name !== undefined) updateData.name = String(name).trim();
+		if (username !== undefined)
+			updateData.username = username === null ? null : String(username).trim();
+		if (notes !== undefined) updateData.notes = notes === null ? null : String(notes).trim();
+		if (categories !== undefined) {
+			const validEnumValues = ["GOOGLE"];
+			const normalized = categories
+				.map((cat: any) => String(cat).toUpperCase())
+				.filter((cat: string) => validEnumValues.includes(cat));
+			updateData.categories = normalized as any;
+		}
+
+		const candidateName = updateData.name ?? existing.name;
+		const candidateUsername =
+			updateData.username !== undefined ? updateData.username : (existing.username ?? null);
+		const duplicate = await prisma.account.findFirst({
+			where: {
+				id: { not: existing.id },
+				userid: user.id,
+				name: candidateName,
+				username: candidateUsername,
+			},
+		});
+		if (duplicate) return res.status(409).json({ message: "Account already exists" });
+
+		const updated = await prisma.account.update({
+			where: { id: accountId },
+			data: updateData,
+		});
+
+		return res.status(200).json({
+			message: "Account updated",
+			id: updated.id,
+			name: updated.name,
+			username: updated.username,
+			notes: updated.notes,
+			categories: updated.categories,
+			userid: updated.userid,
+		});
+	} catch (error) {
+		console.error("Error in PATCH /accounts/:id", error);
+		return res.status(500).json({ message: "Error updating account" });
+	}
+});
 
 /**
  * Middleware: Sanitizes the entire req.body array and maps each account to the Account schema.
