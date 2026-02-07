@@ -3,6 +3,7 @@ import { getIconUrl } from "./../../src/utilities/iconService";
 import SidebarView from "./SidebarView";
 import SidebarAccountForm from "./SidebarAccountForm";
 import SidebarConnectionForm from "./SidebarConnectionForm";
+import SidebarLinkView from "./SidebarLinkView";
 import useSidebarStore from "./../../src/store/sidebarStore";
 
 const Sidebar = ({
@@ -22,9 +23,12 @@ const Sidebar = ({
     value: "",
   });
   const [errors, setErrors] = useState({});
+  const [isLinking, setIsLinking] = useState(false);
+  const [linkTargetId, setLinkTargetId] = useState(null);
   const {
     createAccount,
     createConnection,
+    linkConnection,
     loading,
     error,
     success,
@@ -35,6 +39,13 @@ const Sidebar = ({
     setForm({ name: "", username: "", notes: "", type: "mail", value: "" });
     setErrors({});
   }, [viewMode, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || viewMode !== "view") {
+      setIsLinking(false);
+      setLinkTargetId(null);
+    }
+  }, [isOpen, viewMode, selectedAccount]);
 
   const validate = (name, value, currentType) => {
     let error = "";
@@ -93,12 +104,51 @@ const Sidebar = ({
         );
   }, [selectedAccount, rawEntities, isConnection, viewMode]);
 
+  const linkTargets = useMemo(() => {
+    if (!selectedAccount || viewMode !== "view") return [];
+    if (isConnection) {
+      const uniqueAccounts = new Map();
+      (rawEntities || []).forEach((conn) => {
+        (conn.accounts || []).forEach((acc) => {
+          if (!uniqueAccounts.has(acc.id)) {
+            uniqueAccounts.set(acc.id, acc);
+          }
+        });
+      });
+      const linkedAccountIds = new Set(
+        (selectedAccount.accounts || []).map((acc) => acc.id),
+      );
+      return Array.from(uniqueAccounts.values()).filter(
+        (acc) => !linkedAccountIds.has(acc.id),
+      );
+    }
+
+    const linkedConnectionIds = new Set(
+      sidebarConnections.map((conn) => conn.id),
+    );
+    return (rawEntities || []).filter(
+      (conn) => !linkedConnectionIds.has(conn.id),
+    );
+  }, [selectedAccount, rawEntities, isConnection, viewMode, sidebarConnections]);
+
   const activeIconKey = useMemo(() => {
     if (viewMode === "createAccount") return form.name;
     if (viewMode === "createConnection") return form.type;
     if (!selectedAccount) return "";
     return isConnection ? selectedAccount.type : selectedAccount.name;
   }, [viewMode, form.name, form.type, selectedAccount, isConnection]);
+
+  const linkLabel = isConnection ? "Link to Account" : "Link to Connection";
+  const isLinkDisabled = !linkTargetId || loading;
+
+  const headerTitle = useMemo(() => {
+    if (viewMode === "view") {
+      if (isLinking) return linkLabel;
+      return selectedAccount?.name || selectedAccount?.type || "Details";
+    }
+    if (viewMode === "createAccount") return "New Account";
+    return "New Connection";
+  }, [viewMode, isLinking, linkLabel, selectedAccount]);
 
   const handleCreate = async () => {
     try {
@@ -112,6 +162,21 @@ const Sidebar = ({
       onClose();
     } catch (err) {
       console.error("Error creating:", err);
+    }
+  };
+
+  const handleLink = async () => {
+    if (!selectedAccount || !linkTargetId) return;
+    const payload = isConnection
+      ? { accountId: linkTargetId, identityId: selectedAccount.id }
+      : { accountId: selectedAccount.id, identityId: linkTargetId };
+
+    try {
+      await linkConnection(payload);
+      setIsLinking(false);
+      setLinkTargetId(null);
+    } catch (err) {
+      console.error("Error linking:", err);
     }
   };
 
@@ -146,11 +211,7 @@ const Sidebar = ({
             />
           </div>
           <h2 className="text-xl font-black text-white uppercase text-center truncate w-full tracking-tighter">
-            {viewMode === "view"
-              ? selectedAccount?.name || selectedAccount?.type || "Details"
-              : viewMode === "createAccount"
-                ? "New Account"
-                : "New Connection"}
+            {headerTitle}
           </h2>
         </div>
 
@@ -168,11 +229,21 @@ const Sidebar = ({
             onChange={handleChange}
           />
         )}
-        {viewMode === "view" && selectedAccount && (
+        {viewMode === "view" && selectedAccount && !isLinking && (
           <SidebarView
             selectedAccount={selectedAccount}
             connections={sidebarConnections}
             onSelectAccount={onSelectAccount}
+            onStartLink={() => setIsLinking(true)}
+          />
+        )}
+        {viewMode === "view" && selectedAccount && isLinking && (
+          <SidebarLinkView
+            targets={linkTargets}
+            label={isConnection ? "Account" : "Connection"}
+            selectedId={linkTargetId}
+            onBack={() => setIsLinking(false)}
+            onPick={(item) => setLinkTargetId(item.id)}
           />
         )}
       </div>
@@ -191,6 +262,22 @@ const Sidebar = ({
               <p className="text-red-500 text-xs text-center">{error}</p>
             )}
           </>
+        ) : isLinking ? (
+          <div className="space-y-3">
+            <button
+              disabled={isLinkDisabled}
+              onClick={handleLink}
+              className={`w-full py-3 text-[10px] font-black rounded-md uppercase tracking-[0.2em] transition-all duration-300 ${isLinkDisabled ? "bg-gray-800 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white cursor-pointer hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)]"}`}
+            >
+              {loading ? "Linking..." : "Link"}
+            </button>
+            <button
+              onClick={() => setIsLinking(false)}
+              className="w-full py-3 bg-white/5 text-white text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-white/10 transition-colors"
+            >
+              Back to Details
+            </button>
+          </div>
         ) : (
           <>
             <button className="w-full py-3 bg-white/5 text-white text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-white/10 transition-colors">
