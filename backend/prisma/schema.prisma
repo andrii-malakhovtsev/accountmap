@@ -30,6 +30,8 @@ model User {
   password String
 
   accounts Account[]
+
+  identities Identity[]
 }
 
 model Account {
@@ -59,5 +61,7 @@ model Identity {
   value String // The actual information
   type  IdentityType // "Type of Information Stored"
 
+  user        User          @relation(fields: [userid], references: [id])
+  userid      String
   connections Connections[]
 }
