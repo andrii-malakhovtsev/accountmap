@@ -52,6 +52,29 @@ const useSidebarStore = create((set) => ({
 		}
 	},
 
+	linkConnection: async ({ accountId, identityId }) => {
+		set({ loading: true, error: null, success: false });
+		try {
+			const res = await fetch(
+				`http://localhost:8081/api/connections/add/${accountId}`,
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ identity: { id: identityId } }),
+				},
+			);
+
+			if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+			const data = await res.json();
+			set({ loading: false, success: true });
+			return data;
+		} catch (err) {
+			set({ error: err.message || "Failed to link connection", loading: false });
+			throw err;
+		}
+	},
+
 	resetState: () => set({ loading: false, error: null, success: false }),
 }));
 

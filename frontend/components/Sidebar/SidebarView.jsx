@@ -1,11 +1,19 @@
 import React from 'react';
 import { getIconUrl } from './../../src/utilities/iconService';
 
-const SidebarView = ({ selectedAccount, connections, onSelectAccount }) => {
+const SidebarView = ({ selectedAccount, connections, onSelectAccount, onStartLink }) => {
   const isMainNodeConnection = !!selectedAccount?.accounts;
+  const linkLabel = isMainNodeConnection ? "Link to Account" : "Link to Connection";
 
   return (
     <div className="space-y-6 animate-in fade-in">
+      <button
+        type="button"
+        onClick={onStartLink}
+        className="w-full py-2 bg-white/5 text-white text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-white/10 transition-colors border border-white/10"
+      >
+        {linkLabel}
+      </button>
       <div className="space-y-3">
         <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">
           {isMainNodeConnection ? `Impacted Accounts (${connections.length})` : `Linked Connections (${connections.length})`}
