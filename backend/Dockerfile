@@ -18,4 +18,4 @@ RUN npm run build
 
 EXPOSE 5000
 
-CMD ["sh", "./start.sh"]
+CMD sh -c "npx prisma db push && npm run start"
