@@ -29,6 +29,37 @@ router.get("/map", async (req: any, res: any) => {
 	}
 });
 
+// GET /:id
+// Retrieves an account and its connections (linked identities)
+router.get("/:id", async (req: any, res: any) => {
+	const accountId = req.params.id;
+	if (!accountId) return res.status(400).json({ message: "Missing account id in params" });
+
+	try {
+		const user = await get_default_user();
+		if (!user) return res.status(500).json({ message: "Default user not found" });
+
+		const account = await prisma.account.findUnique({
+			where: { id: accountId },
+			include: {
+				connections: {
+					select: {
+						identity: true,
+					},
+				},
+			},
+		});
+		if (!account) return res.status(404).json({ message: "Account not found" });
+		if (account.userid !== user.id)
+			return res.status(403).json({ message: "Account ownership mismatch" });
+
+		return res.status(200).json(account);
+	} catch (error) {
+		console.error("Error in GET /accounts/:id", error);
+		return res.status(500).json({ message: "Error retrieving account" });
+	}
+});
+
 type PostAccounts = Omit<Account, "id" | "userid"> & {
 	identities?: Omit<Identity, "id" | "userid">[];
 };
@@ -198,6 +229,35 @@ router.patch("/:id", async (req: any, res: any) => {
 	} catch (error) {
 		console.error("Error in PATCH /accounts/:id", error);
 		return res.status(500).json({ message: "Error updating account" });
+	}
+});
+
+async function delete_connections(accountId: string) {
+	await prisma.connections.deleteMany({ where: { accountId } });
+}
+
+// DELETE /:id
+// Deletes an account and its connections
+router.delete("/:id", async (req: any, res: any) => {
+	const accountId = req.params.id;
+	if (!accountId) return res.status(400).json({ message: "Missing account id in params" });
+
+	try {
+		const user = await get_default_user();
+		if (!user) return res.status(500).json({ message: "Default user not found" });
+
+		const existing = await prisma.account.findUnique({ where: { id: accountId } });
+		if (!existing) return res.status(404).json({ message: "Account not found" });
+		if (existing.userid !== user.id)
+			return res.status(403).json({ message: "Account ownership mismatch" });
+
+		await delete_connections(accountId);
+		await prisma.account.delete({ where: { id: accountId } });
+
+		return res.status(200).json({ message: "Account deleted", id: accountId });
+	} catch (error) {
+		console.error("Error in DELETE /accounts/:id", error);
+		return res.status(500).json({ message: "Error deleting account" });
 	}
 });
 
