@@ -1,125 +1,99 @@
-import React from "react";
-import { useRef, useState, useEffect } from "react";
-import { parseCSV } from "../src/utils/csvParser";
-import updateDataStore from "../src/store/updateDataStore";
+import React, { useRef } from "react";
+import AddAccount from "./AddAccount";
+import AddConnection from "./AddConnection";
+
 const Header = ({
   isSidebarOpen,
   setIsSidebarOpen,
   currentView,
   setCurrentView,
+  hasData,
+  onAddAccount,
+  onAddConnection
 }) => {
-  const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
 
-  const { uploadBulkAccounts } = updateDataStore.getState();
-
-  const handleClick = () => {
-    fileInputRef.current.click();
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
   };
-
-  const handleChange = (event) => {
-    const selectedFile = event.target.files[0];
-
-    // Validation: only allow CSV files
-    if (selectedFile && !selectedFile.name.endsWith(".csv")) {
-      alert("Please upload a valid CSV file");
-      event.target.value = ""; // Clear the input
-      return;
-    }
-
-    if (selectedFile) {
-      setFile(selectedFile);
-    }
-  };
-
-  useEffect(() => {
-    if (file) {
-      parseCSV(file)
-        .then((csvData) => {
-          uploadBulkAccounts(csvData);
-        })
-        .catch((error) => {
-          console.error("Error parsing CSV:", error);
-        });
-    }
-  }, [file]);
 
   return (
-    <header className="h-16 bg-[#1a1a1a]/80 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-6 z-20">
+    <header className="h-16 bg-[#0f0f0f]/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-6 z-[60]">
       <div className="flex items-center gap-6">
-        <h2 className="font-bold text-xl tracking-tighter text-blue-500">
+        <h2 className="font-black text-xl tracking-tighter text-blue-500 uppercase">
           AccountMap
         </h2>
 
-        <div className="flex items-center gap-2 border-l border-white/10 pl-6">
-          <button
-            className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold transition shadow-lg shadow-blue-900/20"
-            onClick={() => console.log("Add Account Clicked")}
-          >
-            <span className="text-lg leading-none">+</span>
-            ADD ACCOUNT
-          </button>
+        {hasData && (
+          <div className="flex items-center gap-2 border-l border-white/10 pl-6 animate-in fade-in slide-in-from-left-4 duration-500">
+            <AddAccount onClick={onAddAccount} variant="header" />
+            <AddConnection onClick={onAddConnection} variant="header" />
 
-          <button
-            className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-xs font-bold transition"
-            onClick={() => console.log("Add Connection Clicked")}
-          >
-            <span className="text-blue-400">🔗</span>
-            ADD CONNECTION
-          </button>
+            <button
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 border border-white/10 rounded-lg text-[10px] font-black tracking-widest transition uppercase"
+              onClick={handleUploadClick}
+            >
+              <span className="text-blue-400">📥</span>
+              Upload CSV
+            </button>
 
-          <button
-            className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-xs font-bold transition"
-            onClick={handleClick}
-          >
-            <span className="text-blue-400">📥</span>
-            UPLOAD CSV
-          </button>
+            <button
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-400 border border-white/10 rounded-lg text-[10px] font-black tracking-widest transition uppercase"
+              onClick={() => console.log("Analyze clicked")}
+            >
+              <span className="text-blue-400">✨</span>
+              Analyze
+            </button>
 
-          <button
-            className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-xs font-bold transition"
-            onClick={() => console.log("Add Connection Clicked")}
-          >
-            <span className="text-blue-400">✨</span>
-            ANALYZE MAP
-          </button>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".csv"
-            onChange={handleChange}
-            style={{ display: "none" }}
-          />
-        </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".csv"
+              onChange={(e) => console.log(e.target.files[0])}
+              className="hidden"
+            />
+          </div>
+        )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="flex bg-black/40 rounded-lg p-1 mr-4 border border-white/5">
-          <button
-            onClick={() => setCurrentView("map")}
-            className={`px-4 py-1 rounded-md text-xs font-bold transition ${currentView === "map" ? "bg-[#333] text-white" : "text-gray-500 hover:text-gray-300"}`}
-          >
-            MAP
-          </button>
-          <button
-            onClick={() => setCurrentView("list")}
-            className={`px-4 py-1 rounded-md text-xs font-bold transition ${currentView === "list" ? "bg-[#333] text-white" : "text-gray-500 hover:text-gray-300"}`}
-          >
-            LIST
-          </button>
-        </div>
+      <div className="flex items-center gap-4">
+        {hasData && (
+          <div className="flex items-center gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
+            <div className="flex bg-black/40 rounded-lg p-1 border border-white/5">
+              <button
+                onClick={() => setCurrentView("map")}
+                className={`px-4 py-1 rounded-md text-[10px] font-black tracking-widest transition uppercase ${
+                  currentView === "map" 
+                    ? "bg-blue-600 text-white shadow-lg" 
+                    : "text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                Map
+              </button>
+              <button
+                onClick={() => setCurrentView("list")}
+                className={`px-4 py-1 rounded-md text-[10px] font-black tracking-widest transition uppercase ${
+                  currentView === "list" 
+                    ? "bg-blue-600 text-white shadow-lg" 
+                    : "text-gray-500 hover:text-gray-300"
+                }`}
+              >
+                List
+              </button>
+            </div>
 
-        <button className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-full hover:bg-white/10 transition border border-white/10 mr-2">
-          🌙
-        </button>
-
-        <button
-          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          className="p-2 hover:bg-white/10 rounded-lg transition text-sm font-medium border border-white/5"
-        >
-          {isSidebarOpen ? "Hide Menu ✕" : "☰ Menu"}
-        </button>
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className={`px-4 py-2 rounded-lg transition text-[10px] font-black tracking-widest uppercase border ${
+                isSidebarOpen 
+                  ? "bg-white/10 border-white/20 text-white" 
+                  : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
+              }`}
+            >
+              {isSidebarOpen ? "Close Menu ✕" : "☰ Menu"}
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );
