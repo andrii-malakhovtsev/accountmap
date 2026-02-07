@@ -1,4 +1,5 @@
 // Bring in required modules and libraries
+import { createMockData } from "./lib/mock";
 import { prisma } from "./lib/prisma";
 import { app, get_default_user } from "./lib/utils";
 
@@ -37,7 +38,7 @@ async function load_default_user() {
 	});
 }
 
-load_default_user().then(() => {
+load_default_user().then(createMockData).then(() => {
 	app.listen(PORT, () => {
 		console.log(`Server running on port ${PORT}`);
 	});
