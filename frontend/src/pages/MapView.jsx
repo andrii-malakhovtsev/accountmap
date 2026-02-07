@@ -72,23 +72,39 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
             ctx.stroke();
           }
 
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+          ctx.shadowBlur = 4 / globalScale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2 / globalScale;
+
           ctx.beginPath();
           ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
           ctx.fillStyle = isHub ? '#1e1e1e' : '#FFFFFF';
           ctx.fill();
 
+          ctx.shadowColor = 'transparent';
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+          ctx.lineWidth = 0.5 / globalScale;
+          ctx.stroke();
+
           if (img) {
+            const padding = 0.7;
+            const iconSize = size * padding;
             ctx.save();
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-            ctx.clip();
-            ctx.drawImage(img, node.x - size, node.y - size, size * 2, size * 2);
+            ctx.drawImage(
+              img, 
+              node.x - iconSize, 
+              node.y - iconSize, 
+              iconSize * 2, 
+              iconSize * 2
+            );
             ctx.restore();
           }
 
           if (globalScale > 1.2 || isSelected) {
             const label = node.name;
-            const fontSize = (isHub ? 13 : 10) / globalScale; 
+            const fontSize = (isHub ? 12 : 10) / globalScale; 
             ctx.font = `${isHub ? '600' : '400'} ${fontSize}px Inter, Sans-Serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';

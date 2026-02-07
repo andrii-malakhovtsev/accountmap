@@ -73,6 +73,14 @@ const Header = ({
             UPLOAD CSV
           </button>
 
+          <button
+            className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 rounded-lg text-xs font-bold transition"
+            onClick={() => console.log("Add Connection Clicked")}
+          >
+            <span className="text-blue-400">✨</span>
+            ANALYZE MAP
+          </button>
+
           <input
             ref={fileInputRef}
             type="file"
