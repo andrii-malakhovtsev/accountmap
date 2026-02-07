@@ -1,6 +1,8 @@
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import AddAccount from "./AddAccount";
 import AddConnection from "./AddConnection";
+import { parseCSV } from "../src/utils/csvParser";
+import updateDataStore from "../src/store/updateDataStore";
 
 const Header = ({
   isSidebarOpen,
@@ -9,13 +11,45 @@ const Header = ({
   setCurrentView,
   hasData,
   onAddAccount,
-  onAddConnection
+  onAddConnection,
 }) => {
   const fileInputRef = useRef(null);
+  const [file, setFile] = useState(null);
+  const { uploadBulkAccounts } = updateDataStore();
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
   };
+
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files[0];
+
+    // Validation: only allow CSV files
+    if (selectedFile && !selectedFile.name.endsWith(".csv")) {
+      alert("Please upload a valid CSV file");
+      event.target.value = ""; // Clear the input
+      return;
+    }
+
+    if (selectedFile) {
+      setFile(selectedFile);
+    }
+  };
+
+  // Parse CSV and upload when file is selected
+  useEffect(() => {
+    if (file) {
+      parseCSV(file)
+        .then((csvData) => {
+          console.log("Parsed CSV data:", csvData);
+          uploadBulkAccounts(csvData);
+        })
+        .catch((error) => {
+          console.error("Error parsing CSV:", error);
+          alert("Failed to parse CSV file");
+        });
+    }
+  }, [file, uploadBulkAccounts]);
 
   return (
     <header className="h-20 min-h-[80px] flex-shrink-0 bg-[#0f0f0f]/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-8 z-[60]">
@@ -49,7 +83,7 @@ const Header = ({
               ref={fileInputRef}
               type="file"
               accept=".csv"
-              onChange={(e) => console.log(e.target.files[0])}
+              onChange={handleFileChange}
               className="hidden"
             />
           </div>
@@ -63,8 +97,8 @@ const Header = ({
               <button
                 onClick={() => setCurrentView("map")}
                 className={`px-6 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition uppercase ${
-                  currentView === "map" 
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
+                  currentView === "map"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
                     : "text-gray-500 hover:text-gray-300"
                 }`}
               >
@@ -73,8 +107,8 @@ const Header = ({
               <button
                 onClick={() => setCurrentView("list")}
                 className={`px-6 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition uppercase ${
-                  currentView === "list" 
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
+                  currentView === "list"
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
                     : "text-gray-500 hover:text-gray-300"
                 }`}
               >
@@ -85,8 +119,8 @@ const Header = ({
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={`px-5 py-2.5 rounded-xl transition text-[10px] font-black tracking-widest uppercase border ${
-                isSidebarOpen 
-                  ? "bg-white/10 border-white/20 text-white" 
+                isSidebarOpen
+                  ? "bg-white/10 border-white/20 text-white"
                   : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
               }`}
             >

@@ -9,7 +9,8 @@ const useUserStore = create((set) => ({
     set({ loading: true, error: null });
 
     try {
-      const res = await fetch("https://jsonplaceholder.typicode.com/users");
+      console.log("inside fetchUsers");
+      const res = await fetch("http://localhost:8081/api/identities/map");
       const data = await res.json();
       set({ users: data, loading: false });
     } catch (err) {
