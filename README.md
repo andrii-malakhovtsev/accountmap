@@ -1,260 +1,159 @@
-# Team Members
+# Account Map
 
-- Andrii Malakhovtsev, @andrii-malakhovtsev, malakhovtsev.2@wright.edu
-- Brianna Persinger, @BBBree, persinger.9@wright.edu
-- Owen Kemp, @Striker2783, kemp.56@wright.edu
-- Sulav Pradhan, @sulav-pradhan, pradhan.49@wright.edu
-- Wens Kedar Barambona, @b-wens-kedar, barambona.3@wright.edu
+![3D Map View](./public/screen.png)
 
-# Full-Stack Web Demo
+## Team Members
 
-A comprehensive full-stack application demonstration featuring React, Express.js, PostgreSQL, and MongoDB, all orchestrated with Docker Compose. Perfect for technical presentations and as a learning resource for students.
+- Andrii Malakhovtsev, @andrii-malakhovtsev, <malakhovtsev.2@wright.edu>
+- Brianna Persinger, @BBBree, <persinger.9@wright.edu>
+- Owen Kemp, @Striker2783, <kemp.56@wright.edu>
+- Sulav Pradhan, @sulav-pradhan, <pradhan.49@wright.edu>
+- Wens Kedar Barambona, @b-wens-kedar, <barambona.3@wright.edu>
 
-## Architecture
+## Description
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    Frontend (React)                         │
-│                  Port: 8080                                 │
-│        - User Interface with JSX components                 │
-│        - Demonstrates API consumption                       │
-└────────────────────┬────────────────────────────────────────┘
-                     │
-                     │ HTTP Requests
-                     ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Backend API (Express.js)                       │
-│                  Port: 8081                                 │
-│        - RESTful endpoints                                  |
-│        - Database connection management                     │
-└────────┬───────────────────────────────────────┬────────────┘
-         │                                       │
-         │                                       │
-         ▼                                       ▼
-┌──────────────────────┐            ┌──────────────────────┐
-│   PostgreSQL DB      │            │     MongoDB          │
-│   Port: 5432         │            │   Port: 27017        │
-│   - Users table      │            │   - Products coll.   │
-│   - Relational data  │            │   - Document store   │
-└──────────────────────┘            └──────────────────────┘
-```
+This web application helps users manage their different login methods to each account they have made.
 
-## Features
+## How to Run
 
-### Frontend (React)
-- Modern React application with functional components and hooks
-- Separate sections for PostgreSQL and MongoDB demonstrations
-- Real-time data fetching and form submissions
-- Responsive design with gradient styling
-- Error handling and loading states
+### Prerequisites
 
-### Backend (Express.js)
-- RESTful API endpoints for both databases
-- Health check endpoints
-- CORS enabled for local development
-- Automatic database initialization with sample data
-- Graceful shutdown handling
+- Docker and Docker Compose Installed
+- Node.js 24+ (for local development without Docker)
+- Git
 
-### Databases
-- **PostgreSQL**: Demonstrates relational data with a users table
-- **MongoDB**: Demonstrates document storage with a products collection
+### Steps
 
-## Prerequisites
+1. Clone the Repository `git clone https://github.com/andrii-malakhovtsev/accountmap.git`
 
-- Docker and Docker Compose installed
-- Node.js 18+ (for local development without Docker)
-- Git (for cloning/forking)
+2. Install Docker
 
-## Quick Start
+3. Set Working Directory `cd accountmap`
 
-### Using Docker Compose (Recommended)
+4. Docker Compose `docker compose up -d`
 
-1. **Clone or fork this repository**
-   ```bash
-   git clone <repository-url>
-   cd full-stack-web-demo
-   ```
+5. See the frontend at `http://localhost:8080`
+   - Frontend: <http://localhost:8080>
+   - Backend API: <http://localhost:8081>
+   - PostgreSQL: <http://localhost:5432>
 
-2. **Start all services**
-   ```bash
-   docker-compose up --build
-   ```
+6. Stop all services `docker compose down`
 
-3. **Access the application**
-   - Frontend: http://localhost:8080
-   - Backend API: http://localhost:8081
-   - PostgreSQL: localhost:5432
-   - MongoDB: localhost:27017
+7. Clean up volumes `docker compose down -v`
 
-4. **Stop all services**
-   ```bash
-   docker-compose down
-   ```
-
-5. **Clean up volumes (reset databases)**
-   ```bash
-   docker-compose down -v
-   ```
-
-### Local Development (Without Docker)
+### Local Development
 
 #### Backend Setup
-```bash
+
+```sh
 cd backend
 npm install
 npm start
 ```
 
 Required environment variables (or use defaults):
-```bash
+
+```sh
 PORT=8081
 POSTGRES_HOST=localhost
 POSTGRES_PORT=5432
 POSTGRES_USER=demouser
 POSTGRES_PASSWORD=demopass
 POSTGRES_DB=demodb
-MONGODB_URI=mongodb://demouser:demopass@localhost:27017/demodb?authSource=admin
+DATABASE_URL=postgres://demouser:demopass@postgres:5432/demodb
 ```
 
 #### Frontend Setup
-```bash
+
+```sh
 cd frontend
 npm install
 npm start
 ```
 
-Environment variable:
-```bash
-REACT_APP_API_URL=http://localhost:8081
+#### Environment variable
+
+```sh
+REACT_APP_API_URL=<http://localhost:8081>
 ```
 
-## API Endpoints
+## Architecture
 
-### General
-- `GET /` - API information and available endpoints
-
-### PostgreSQL Endpoints
-- `GET /api/postgres/users` - Get all users
-- `POST /api/postgres/users` - Create a new user
-  ```json
-  {
-    "name": "John Doe",
-    "email": "john@example.com"
-  }
-  ```
-- `GET /api/postgres/health` - Check PostgreSQL connection
-
-### MongoDB Endpoints
-- `GET /api/mongodb/products` - Get all products
-- `POST /api/mongodb/products` - Create a new product
-  ```json
-  {
-    "name": "Laptop",
-    "category": "Electronics",
-    "price": 999.99,
-    "stock": 15
-  }
-  ```
-- `GET /api/mongodb/health` - Check MongoDB connection
+```
+_______________________________________
+Frontend (React)
+Port: 8080
+- User Interface with JSX components
+- Graphs (react-force-graph)
+- State Management (zustand)
+_______________________________________
+|
+| Http Requests
+v
+_______________________________________
+Backend API (Express.js)
+- Port: 8081
+- RESTful endpoints
+- Prisma Setup (Database)
+_______________________________________
+|
+| Prisma Interaction
+v
+_______________________________________
+PostgresSQL DB
+Port: 5432
+- User Tables
+- Relational Data
+_______________________________________
+```
 
 ## Project Structure
 
-```
-full-stack-web-demo/
-├── docker-compose.yml          # Docker orchestration
-├── README.md                   # This file
-├── .gitignore                  # Git ignore rules
-├── backend/
-│   ├── Dockerfile              # Backend container config
-│   ├── package.json            # Node dependencies
-│   └── server.js               # Express server with API routes
-└── frontend/
-    ├── Dockerfile              # Frontend container config
-    ├── package.json            # React dependencies
-    ├── public/
-    │   └── index.html          # HTML template
-    └── src/
-        ├── index.js            # React entry point
-        ├── index.css           # Global styles
-        ├── App.jsx             # Main App component
-        ├── App.css             # App styles
-        └── components/
-            ├── PostgresSection.jsx    # PostgreSQL UI
-            ├── MongoDBSection.jsx     # MongoDB UI
-            └── DatabaseSection.css    # Shared component styles
+### Backend
+
+```sh
+prisma
+   prisma.schema # The database schemas
+   migrations # Database migrations
+src
+   lib
+      prisma.ts # Exposes Prisma Connection
+      utils.ts # Exposes Express.js
+   index.ts # Setup for Express.js
+   routes # Contains the endpoints
+Dockerfile # Docker
+package.json # Dependencies
 ```
 
-## Learning Points
+### Frontend
 
-### For Students
-This project demonstrates:
-
-1. **Frontend Development**
-   - React hooks (useState, useEffect)
-   - API integration with fetch
-   - Component composition
-   - Form handling
-   - Conditional rendering
-
-2. **Backend Development**
-   - RESTful API design
-   - Express.js middleware
-   - Database connections (SQL and NoSQL)
-   - Error handling
-   - Async/await patterns
-
-3. **Databases**
-   - PostgreSQL (relational database)
-   - MongoDB (document database)
-   - CRUD operations
-   - Data modeling differences
-
-4. **DevOps**
-   - Docker containerization
-   - Docker Compose orchestration
-   - Multi-service applications
-   - Volume management
-   - Health checks
-
-## Customization
-
-### Adding New Endpoints
-Edit `backend/server.js` to add new routes:
-```javascript
-app.get('/api/your-endpoint', async (req, res) => {
-  // Your logic here
-});
+```sh
+components # Contains the components used in the UI
+src
+   assets # Images and such
+   pages # Map or List Views
+   store # State Management
+   utils
+      iconService.js # Icons
+   App.jsx # Main UI
+Dockerfile # Docker
+package.json # Dependencies
 ```
 
-### Adding New Components
-Create new JSX files in `frontend/src/components/` and import them in `App.jsx`.
+## Images
 
-### Modifying Database Schema
-PostgreSQL tables are initialized in the `initializeDatabases()` function in `server.js`.
+### 3D View
 
-## Troubleshooting
+![3D View](./public/screen.png)
 
-### Port Already in Use
-If ports 8080, 8081, 5432, or 27017 are already in use, modify the port mappings in `docker-compose.yml`:
-```yaml
-ports:
-  - "NEW_PORT:CONTAINER_PORT"
-```
+### 2D View
 
-### Database Connection Errors
-Ensure the databases are fully started before the backend connects. The health checks in docker-compose.yml handle this, but if running locally, wait for database startup.
+![2D View](./public/2d.png)
 
-### Frontend Can't Reach Backend
-Check that REACT_APP_API_URL is set correctly and the backend is running on the specified port.
+### List Connections View
 
-## License
+![List Connections View](<./public/list connections.png>)
 
-This project is open source and available for educational purposes.
+### List Accounts View
 
-## Contributing
-
-Feel free to fork this repository and submit pull requests with improvements!
-
-## Questions?
-
-This demo is maintained by the CEG-CS Alumni Society for educational purposes.
+![List Accounts View](<./public/list accounts.png>)
