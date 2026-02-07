@@ -1,98 +1,119 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import Header from './../components/Header';
-import Sidebar from './../components/Sidebar';
+import Sidebar from './../components/Sidebar/Sidebar';
+import AddAccount from './../components/AddAccount';
+import AddConnection from './../components/AddConnection';
 import MapView from './pages/MapView';
 import ListView from './pages/ListView';
-import { dummyConnections } from './dummyData';
+import useTestStore from './store/testStore';
 
 function App() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const entities = useTestStore((state) => state.entities);
+  const addRandomEntity = useTestStore((state) => state.addRandomEntity);
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [currentView, setCurrentView] = useState('map');
   const [selectedId, setSelectedId] = useState(null);
+  const [viewMode, setViewMode] = useState('view'); 
 
-  const graphData = useMemo(() => {
-    const nodeMap = new Map();
-    const links = [];
+  const hasData = entities.length > 0;
 
-    dummyConnections.forEach(conn => {
-      if (!nodeMap.has(conn.id)) {
-        nodeMap.set(conn.id, { 
-          ...conn, 
-          isHub: true 
-        });
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      const key = e.key.toLowerCase();
+      if (key === 'a') {
+        console.log('Adding Account...');
+        addRandomEntity('account');
       }
-
-      conn.accounts.forEach(acc => {
-        if (!nodeMap.has(acc.id)) {
-          nodeMap.set(acc.id, { 
-            ...acc, 
-            isHub: false
-          });
-        }
-        
-        links.push({ source: conn.id, target: acc.id });
-      });
-    });
-
-    return { 
-      nodes: Array.from(nodeMap.values()), 
-      links,
-      connections: dummyConnections 
+      if (key === 'c') {
+        console.log('Adding Connection...');
+        addRandomEntity('connection');
+      }
     };
-  }, []);
 
-  const handleSelectAccount = (entity) => {
-    setSelectedId(entity.id);
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [addRandomEntity]);
+
+  const handleOpenCreateAccount = () => {
+    setSelectedId(null);
+    setViewMode('createAccount');
     setIsSidebarOpen(true);
   };
 
-  const selectedEntity = useMemo(() => 
-    graphData.nodes.find(n => n.id === selectedId), 
-    [graphData.nodes, selectedId]
-  );
+  const handleOpenCreateConnection = () => {
+    setSelectedId(null);
+    setViewMode('createConnection');
+    setIsSidebarOpen(true);
+  };
 
-  const allAccounts = useMemo(() => 
-    graphData.nodes.filter(n => !n.isHub), 
-    [graphData.nodes]
+  const handleSelectAccount = (entity) => {
+    setSelectedId(entity.id);
+    setViewMode('view');
+    setIsSidebarOpen(true);
+  };
+
+  const handleSave = (newData) => {
+    // This manually pushes to the test store for now
+    useTestStore.setState((state) => ({
+      entities: [...state.entities, { ...newData, id: `manual-${Date.now()}` }]
+    }));
+    setIsSidebarOpen(false);
+  };
+
+  const selectedEntity = useMemo(() => 
+    entities.find(n => n.id === selectedId), 
+    [entities, selectedId]
   );
 
   return (
-    <div className="fixed inset-0 bg-[#0a0a0a] text-white overflow-hidden">
+    <div className="fixed inset-0 bg-[#0a0a0a] text-white overflow-hidden font-sans">
       <div className="flex flex-col h-full w-full items-stretch">
         <Header 
           isSidebarOpen={isSidebarOpen} 
           setIsSidebarOpen={setIsSidebarOpen}
           currentView={currentView}
           setCurrentView={setCurrentView}
+          hasData={hasData}
+          onAddAccount={handleOpenCreateAccount}
+          onAddConnection={handleOpenCreateConnection}
         />
         
-        <main className="flex-1 w-full relative overflow-hidden bg-[#111]">
-          {currentView === 'map' ? (
-            <MapView 
-              nodes={graphData.nodes} 
-              links={graphData.links}
-              onSelectAccount={handleSelectAccount} 
-              selectedId={selectedId} 
-            /> 
+        <main className="flex-1 w-full relative overflow-hidden bg-[#0a0a0a]">
+          {!hasData ? (
+            <div className="absolute inset-0 z-50 flex flex-col items-center justify-center space-y-8 bg-[#0a0a0a]">
+              <div className="text-center space-y-2">
+                <h2 className="text-3xl font-black text-white uppercase tracking-tighter">Vault Initialized</h2>
+                <p className="text-gray-500 font-mono text-xs tracking-widest uppercase">Zero security assets detected in cluster</p>
+                <p className="text-blue-500 animate-pulse text-[10px] font-bold mt-4">Press 'A' for Account or 'C' for Connection</p>
+              </div>
+              
+              <div className="flex gap-4">
+                <AddAccount onClick={handleOpenCreateAccount} variant="central" />
+                <AddConnection onClick={handleOpenCreateConnection} variant="central" />
+              </div>
+            </div>
           ) : (
-            <ListView 
-              accounts={allAccounts} 
-              allNodes={graphData.nodes} 
-              onSelectAccount={handleSelectAccount} 
-              selectedId={selectedId} 
-            />
+            <div className="h-full w-full">
+               {currentView === 'map' ? (
+                <MapView nodes={entities} links={[]} onSelectAccount={handleSelectAccount} selectedId={selectedId} /> 
+              ) : (
+                <ListView accounts={entities.filter(n => !n.isConnection)} allNodes={entities} onSelectAccount={handleSelectAccount} selectedId={selectedId} />
+              )}
+            </div>
           )}
         </main>
       </div>
 
-      <div className="absolute right-0 top-16 bottom-0 z-50 pointer-events-none">
-         <Sidebar 
-           isOpen={isSidebarOpen} 
-           selectedAccount={selectedEntity} 
-           allNodes={graphData.nodes}
-           onSelectAccount={handleSelectAccount}
-         />
-      </div>
+      <Sidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)}
+        viewMode={viewMode}
+        selectedAccount={selectedEntity} 
+        allNodes={entities}
+        onSelectAccount={handleSelectAccount}
+        onSave={handleSave}
+      />
     </div>
   );
 }
