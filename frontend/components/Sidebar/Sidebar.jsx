@@ -1,111 +1,205 @@
-import React, { useState, useEffect } from 'react';
-import { getIconUrl } from './../../src/utilities/iconService';
-import SidebarAccountForm from './SidebarAccountForm';
-import SidebarConnectionForm from './SidebarConnectionForm'; 
-import SidebarView from './SidebarView';
+import React, { useState, useMemo, useEffect } from "react";
+import { getIconUrl } from "./../../src/utilities/iconService";
+import SidebarView from "./SidebarView";
+import SidebarAccountForm from "./SidebarAccountForm";
+import SidebarConnectionForm from "./SidebarConnectionForm";
+import useSidebarStore from "./../../src/store/sidebarStore";
 
-const Sidebar = ({ isOpen, onClose, viewMode, selectedAccount, allNodes, onSelectAccount, onSave }) => {
-  const [form, setForm] = useState({ name: '', username: '', notes: '', type: 'mail', value: '' });
+const Sidebar = ({
+  isOpen,
+  onClose,
+  viewMode,
+  selectedAccount,
+  onSelectAccount,
+  rawEntities,
+}) => {
+  console.log("selectedAccount in Sidebar:", selectedAccount);
+  const [form, setForm] = useState({
+    name: "",
+    username: "",
+    notes: "",
+    type: "mail",
+    value: "",
+  });
   const [errors, setErrors] = useState({});
+  const {
+    createAccount,
+    createConnection,
+    loading,
+    error,
+    success,
+    resetState,
+  } = useSidebarStore();
 
   useEffect(() => {
-    setForm({ name: '', username: '', notes: '', type: 'mail', value: '' });
+    setForm({ name: "", username: "", notes: "", type: "mail", value: "" });
     setErrors({});
   }, [viewMode, isOpen]);
 
-  const validate = (name, val, type) => {
-    if (name === 'name' || name === 'username') return val.trim().length > 0;
-    if (name === 'value') {
-      if (type === 'mail') return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
-      if (type === 'phone') return /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3,4}[-\s\.]?[0-9]{4,6}$/.test(val);
-      return val.trim().length > 0;
+  const validate = (name, value, currentType) => {
+    let error = "";
+    if (name === "value") {
+      if (!value.trim()) {
+        error = "Value is required";
+      } else if (currentType === "mail" && !value.includes("@")) {
+        error = "Invalid email address (missing @)";
+      } else if (currentType === "phone") {
+        // Must start with + and contain only digits after that
+        const phoneRegex = /^\+[0-9]+$/;
+        if (!value.startsWith("+")) {
+          error = "Phone must start with +";
+        } else if (!phoneRegex.test(value)) {
+          error = "Digits only after +";
+        } else if (value.length < 8) {
+          error = "Number too short";
+        }
+      }
+      // Auth type has no parsing/regex, just the "Value is required" check above
     }
-    return true;
+
+    if (name === "name" && !value.trim()) error = "Name is required";
+    if (name === "username" && !value.trim()) error = "Username is required";
+
+    return error;
   };
 
-  const handleInputChange = (field, val) => {
-    setForm(prev => {
-      const newForm = { ...prev, [field]: val };
-      const isValid = validate(field, val, newForm.type);
-      setErrors(errs => ({ ...errs, [field]: !isValid }));
+  const handleChange = (field, value) => {
+    setForm((prev) => {
+      const newForm = { ...prev, [field]: value };
+      const error = validate(field, value, newForm.type);
+      setErrors((prevErr) => ({ ...prevErr, [field]: error }));
       return newForm;
     });
   };
 
-  const handleSaveClick = () => {
-    onSave({
-      ...form,
-      isConnection: viewMode === 'createConnection',
-      id: `node-${Date.now()}`,
-    });
+  const isConnection = !!selectedAccount?.accounts;
+
+  const isValid = useMemo(() => {
+    if (viewMode === "createAccount") {
+      return form.name && form.username && !errors.name && !errors.username;
+    }
+    if (viewMode === "createConnection") {
+      return form.value && !errors.value;
+    }
+    return true;
+  }, [viewMode, form, errors]);
+
+  const sidebarConnections = useMemo(() => {
+    if (!selectedAccount || viewMode !== "view") return [];
+    return isConnection
+      ? selectedAccount.accounts || []
+      : (rawEntities || []).filter((c) =>
+          c.accounts?.some((a) => a.id === selectedAccount.id),
+        );
+  }, [selectedAccount, rawEntities, isConnection, viewMode]);
+
+  const activeIconKey = useMemo(() => {
+    if (viewMode === "createAccount") return form.name;
+    if (viewMode === "createConnection") return form.type;
+    if (!selectedAccount) return "";
+    return isConnection ? selectedAccount.type : selectedAccount.name;
+  }, [viewMode, form.name, form.type, selectedAccount, isConnection]);
+
+  const handleCreate = async () => {
+    try {
+      if (viewMode === "createAccount") {
+        await createAccount(form);
+        setForm({ name: "", username: "", notes: "", type: "mail", value: "" });
+      } else if (viewMode === "createConnection") {
+        await createConnection(form);
+        setForm({ name: "", username: "", notes: "", type: "mail", value: "" });
+      }
+      onClose();
+    } catch (err) {
+      console.error("Error creating:", err);
+    }
   };
 
-  const isConnection = selectedAccount?.isConnection;
-  const associatedNodes = isConnection 
-    ? (selectedAccount.accounts || [])
-    : allNodes.filter(node => node.isConnection && node.accounts?.some(acc => acc.id === selectedAccount?.id));
-
-  const isFormValid = viewMode === 'view' ? true : (
-    form.name && !errors.name && (
-      viewMode === 'createAccount' 
-        ? (form.username && !errors.username) 
-        : (form.value && !errors.value)
-    )
-  );
+  useEffect(() => {
+    if (success) {
+      resetState();
+    }
+  }, [success]);
 
   return (
-    <aside className={`absolute right-0 top-16 bottom-0 w-80 bg-[#0f0f0f]/95 backdrop-blur-xl border-l border-white/10 flex flex-col z-50 shadow-2xl transition-transform duration-300 ease-in-out pointer-events-auto ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-      <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
+    <aside
+      className={`absolute right-0 top-20 bottom-0 w-80 bg-[#0f0f0f]/95 backdrop-blur-xl border-l border-white/10 flex flex-col z-50 transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+    >
+      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
         <div className="flex flex-col items-center mb-8 relative">
-          <button onClick={onClose} className="absolute -top-4 -right-4 p-2 text-gray-500 hover:text-white transition-colors">✕</button>
-          
-          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center p-4 shadow-2xl mb-4 transition-transform hover:scale-105">
+          <button
+            onClick={onClose}
+            className="absolute -top-4 -right-4 p-2 text-gray-500 hover:text-white"
+          >
+            ✕
+          </button>
+
+          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center p-4 mb-4 shadow-2xl overflow-hidden">
             <img
-              src={getIconUrl(viewMode === 'view' ? selectedAccount?.name : form.name)} 
+              src={getIconUrl(activeIconKey)}
               className="max-w-full max-h-full object-contain"
-              alt="" 
-              onError={(e) => { e.target.src = 'https://cdn-icons-png.flaticon.com/512/633/633600.png'; }}
+              alt=""
+              onError={(e) => {
+                e.target.src =
+                  "https://cdn-icons-png.flaticon.com/512/633/633600.png";
+              }}
             />
           </div>
-          
-          <h2 className="text-xl font-bold text-white tracking-tight text-center truncate w-full uppercase">
-            {viewMode === 'view' ? (selectedAccount?.name || "Select Account") : (viewMode === 'createAccount' ? "New Account" : "New Connection")}
+          <h2 className="text-xl font-black text-white uppercase text-center truncate w-full tracking-tighter">
+            {viewMode === "view"
+              ? selectedAccount?.name || selectedAccount?.type || "Details"
+              : viewMode === "createAccount"
+                ? "New Account"
+                : "New Connection"}
           </h2>
-          
-          <span className={`text-[10px] font-black uppercase tracking-widest mt-1 ${viewMode === 'view' ? 'text-green-500' : 'text-blue-400'}`}>
-            {viewMode === 'view' ? "Secure" : "Provisioning"}
-          </span>
         </div>
 
-        {viewMode === 'createAccount' && <SidebarAccountForm form={form} errors={errors} onChange={handleInputChange} />}
-        {viewMode === 'createConnection' && <SidebarConnectionForm form={form} errors={errors} onChange={handleInputChange} />}
-        {viewMode === 'view' && selectedAccount && (
-          <SidebarView 
-            selectedAccount={selectedAccount} 
-            connections={associatedNodes} 
-            allNodes={allNodes} 
-            onSelectAccount={onSelectAccount} 
-            onAddClick={() => onSelectAccount(selectedAccount, 'createConnection')}
+        {viewMode === "createAccount" && (
+          <SidebarAccountForm
+            form={form}
+            errors={errors}
+            onChange={handleChange}
+          />
+        )}
+        {viewMode === "createConnection" && (
+          <SidebarConnectionForm
+            form={form}
+            errors={errors}
+            onChange={handleChange}
+          />
+        )}
+        {viewMode === "view" && selectedAccount && (
+          <SidebarView
+            selectedAccount={selectedAccount}
+            connections={sidebarConnections}
+            onSelectAccount={onSelectAccount}
           />
         )}
       </div>
 
       <div className="p-4 border-t border-white/5 bg-black/20 space-y-3">
-        <button 
-          onClick={handleSaveClick}
-          disabled={!isFormValid && viewMode !== 'view'}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-30 disabled:grayscale disabled:cursor-not-allowed text-white text-[10px] font-black rounded-md transition uppercase tracking-[0.2em]"
-        >
-          {viewMode === 'view' ? "Save Changes" : (viewMode === 'createAccount' ? "Create Account" : "Create Connection")}
-        </button>
-
-        {viewMode === 'view' && (
-          <button 
-            onClick={() => console.log("Delete triggered")}
-            className="w-full py-3 bg-transparent border border-red-900/30 hover:bg-red-900/20 text-red-500/70 hover:text-red-500 text-[10px] font-black rounded-md transition uppercase tracking-[0.2em]"
-          >
-            Delete {selectedAccount?.isConnection ? "Connection" : "Account"}
-          </button>
+        {viewMode !== "view" ? (
+          <>
+            <button
+              disabled={!isValid || loading}
+              onClick={handleCreate}
+              className={`w-full py-3 text-[10px] font-black rounded-md uppercase tracking-[0.2em] transition-all duration-300 ${isValid && !loading ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)]" : "bg-gray-800 text-gray-500 cursor-not-allowed"}`}
+            >
+              {loading ? "Creating..." : "Create"}
+            </button>
+            {error && (
+              <p className="text-red-500 text-xs text-center">{error}</p>
+            )}
+          </>
+        ) : (
+          <>
+            <button className="w-full py-3 bg-white/5 text-white text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-white/10 transition-colors">
+              Save
+            </button>
+            <button className="w-full py-3 border border-red-900/30 text-red-500/70 text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-red-900/10 transition-colors">
+              Delete
+            </button>
+          </>
         )}
       </div>
     </aside>
