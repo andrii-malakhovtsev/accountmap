@@ -13,6 +13,7 @@ const Sidebar = ({
   onSelectAccount,
   rawEntities,
 }) => {
+  console.log("selectedAccount in Sidebar:", selectedAccount);
   const [form, setForm] = useState({
     name: "",
     username: "",

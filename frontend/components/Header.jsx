@@ -11,11 +11,15 @@ const Header = ({
   setCurrentView,
   hasData,
   onAddAccount,
-  onAddConnection,
+  onAddConnection
 }) => {
   const fileInputRef = useRef(null);
   const [file, setFile] = useState(null);
   const { uploadBulkAccounts } = updateDataStore();
+  
+  // States for API handling
+  const [analysisResult, setAnalysisResult] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -24,10 +28,9 @@ const Header = ({
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
 
-    // Validation: only allow CSV files
     if (selectedFile && !selectedFile.name.endsWith(".csv")) {
       alert("Please upload a valid CSV file");
-      event.target.value = ""; // Clear the input
+      event.target.value = "";
       return;
     }
 
@@ -36,23 +39,42 @@ const Header = ({
     }
   };
 
-  // Parse CSV and upload when file is selected
   useEffect(() => {
-    if (file) {
-      parseCSV(file)
-        .then((csvData) => {
-          console.log("Parsed CSV data:", csvData);
-          uploadBulkAccounts(csvData);
-        })
-        .catch((error) => {
-          console.error("Error parsing CSV:", error);
-          alert("Failed to parse CSV file");
-        });
-    }
+    if (!file) return;
+
+    parseCSV(file)
+      .then((csvData) => {
+        uploadBulkAccounts(csvData);
+      })
+      .catch((error) => {
+        console.error("Error parsing CSV:", error);
+        alert("Failed to parse CSV file");
+      });
   }, [file, uploadBulkAccounts]);
 
+  const handleAnalyze = async () => {
+    setIsAnalyzing(true);
+    setAnalysisResult(null); // Clear previous result
+    
+    try {
+      const response = await fetch("http://localhost:8081/api/ai/analyze", {
+        method: 'GET',
+      });
+      
+      if (!response.ok) throw new Error("Analysis failed");
+      
+      const data = await response.text(); // Use .json() if your API returns an object
+      setAnalysisResult(data);
+    } catch (err) {
+      setAnalysisResult("Failed to retrieve analysis. Please try again.");
+      console.error(err);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   return (
-    <header className="h-20 min-h-[80px] flex-shrink-0 bg-[#0f0f0f]/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-8 z-[60]">
+    <header className="h-20 min-h-[80px] flex-shrink-0 bg-[#0f0f0f]/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-8 z-[60] relative">
       <div className="flex items-center gap-8">
         <h2 className="font-black text-2xl tracking-tighter text-blue-500 uppercase">
           AccountMap
@@ -71,12 +93,16 @@ const Header = ({
               Upload CSV
             </button>
 
+            {/* ANALYZE BUTTON */}
             <button
-              className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-400 border border-white/10 rounded-lg text-[10px] font-black tracking-widest transition uppercase"
-              onClick={() => console.log("Analyze clicked")}
+              className={`flex items-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-[10px] font-black tracking-widest transition uppercase ${
+                isAnalyzing ? "text-blue-300 animate-pulse" : "text-gray-400 hover:bg-white/10"
+              }`}
+              onClick={handleAnalyze}
+              disabled={isAnalyzing}
             >
-              <span className="text-blue-400">✨</span>
-              Analyze
+              <span className="text-blue-400">{isAnalyzing ? "⌛" : "✨"}</span>
+              {isAnalyzing ? "Analyzing..." : "Analyze"}
             </button>
 
             <input
@@ -90,6 +116,21 @@ const Header = ({
         )}
       </div>
 
+      {/* API RESPONSE ELEMENT */}
+      {analysisResult && (
+        <div className="absolute top-[85px] left-8 right-8 bg-blue-600/10 border border-blue-500/30 backdrop-blur-md p-3 rounded-xl flex items-center justify-between animate-in slide-in-from-top-2 duration-300">
+          <p className="text-[11px] font-medium text-blue-100 italic">
+            <span className="font-black mr-2">RESULT:</span> {analysisResult}
+          </p>
+          <button 
+            onClick={() => setAnalysisResult(null)}
+            className="text-blue-400 hover:text-white transition-colors p-1"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <div className="flex items-center gap-4">
         {hasData && (
           <div className="flex items-center gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -97,8 +138,8 @@ const Header = ({
               <button
                 onClick={() => setCurrentView("map")}
                 className={`px-6 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition uppercase ${
-                  currentView === "map"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                  currentView === "map" 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
                     : "text-gray-500 hover:text-gray-300"
                 }`}
               >
@@ -107,8 +148,8 @@ const Header = ({
               <button
                 onClick={() => setCurrentView("list")}
                 className={`px-6 py-1.5 rounded-lg text-[10px] font-black tracking-widest transition uppercase ${
-                  currentView === "list"
-                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20"
+                  currentView === "list" 
+                    ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
                     : "text-gray-500 hover:text-gray-300"
                 }`}
               >
@@ -119,8 +160,8 @@ const Header = ({
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className={`px-5 py-2.5 rounded-xl transition text-[10px] font-black tracking-widest uppercase border ${
-                isSidebarOpen
-                  ? "bg-white/10 border-white/20 text-white"
+                isSidebarOpen 
+                  ? "bg-white/10 border-white/20 text-white" 
                   : "bg-white/5 border-white/5 text-gray-400 hover:bg-white/10"
               }`}
             >
