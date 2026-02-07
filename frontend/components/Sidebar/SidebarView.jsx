@@ -7,6 +7,39 @@ const SidebarView = ({ selectedAccount, connections, onSelectAccount, onStartLin
 
   return (
     <div className="space-y-6 animate-in fade-in">
+      <div className="space-y-2">
+        <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">
+          {isMainNodeConnection ? "Identity Identifiers" : "Account Identifiers"}
+        </label>
+        <div className="space-y-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[10px] uppercase tracking-widest text-gray-500">
+              {isMainNodeConnection ? "Type" : "Name"}
+            </span>
+            <span className="text-[11px] text-gray-200 font-bold truncate max-w-[180px] text-right">
+              {isMainNodeConnection
+                ? (selectedAccount.type || "-")
+                : (selectedAccount.name || "-")}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[10px] uppercase tracking-widest text-gray-500">
+              {isMainNodeConnection ? "Value" : "Username"}
+            </span>
+            <span className="text-[11px] text-gray-200 font-bold truncate max-w-[180px] text-right">
+              {isMainNodeConnection
+                ? (selectedAccount.value || "-")
+                : (selectedAccount.username || "-")}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <span className="text-[10px] uppercase tracking-widest text-gray-500">ID</span>
+            <span className="text-[10px] text-gray-400 font-mono truncate max-w-[180px] text-right">
+              {selectedAccount.id || "-"}
+            </span>
+          </div>
+        </div>
+      </div>
       <button
         type="button"
         onClick={onStartLink}
