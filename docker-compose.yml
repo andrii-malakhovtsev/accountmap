@@ -39,11 +39,7 @@ services:
     container_name: demo-backend
     environment:
       PORT: 8081
-      POSTGRES_HOST: postgres
-      POSTGRES_PORT: 5432
-      POSTGRES_USER: demouser
-      POSTGRES_PASSWORD: demopass
-      POSTGRES_DB: demodb
+      DATABASE_URL: postgres://demouser:demopass@postgres:5432/demodb
     ports:
       - "8081:8081"
     depends_on:
