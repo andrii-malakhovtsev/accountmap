@@ -4,3 +4,4 @@ import "./get_accounts";
 import "./identities";
 import "./patch_account";
 import "./delete_account";
+import "./enums";
