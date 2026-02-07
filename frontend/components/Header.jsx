@@ -1,6 +1,7 @@
 import React from "react";
 import { useRef, useState, useEffect } from "react";
 import { parseCSV } from "../src/utils/csvParser";
+import updateDataStore from "../src/store/updateDataStore";
 const Header = ({
   isSidebarOpen,
   setIsSidebarOpen,
@@ -9,6 +10,8 @@ const Header = ({
 }) => {
   const [file, setFile] = useState(null);
   const fileInputRef = useRef(null);
+
+  const { uploadBulkAccounts } = updateDataStore.getState();
 
   const handleClick = () => {
     fileInputRef.current.click();
@@ -33,7 +36,7 @@ const Header = ({
     if (file) {
       parseCSV(file)
         .then((csvData) => {
-          console.log("this is csvData", csvData);
+          uploadBulkAccounts(csvData);
         })
         .catch((error) => {
           console.error("Error parsing CSV:", error);

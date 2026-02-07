@@ -82,7 +82,6 @@ async function sanitizeAccount(req: any, res: any, next: any) {
 
 router.route("/bulk").post(sanitizeAccount, async (req: any, res: any) => {
 	try {
-		console.log(req.sanitizedBody);
 		const createMany = await prisma.account.createMany({
 			data: req.sanitizedBody,
 		});

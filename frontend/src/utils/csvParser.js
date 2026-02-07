@@ -19,7 +19,13 @@ export function parseCSV(file) {
             obj[header.trim()] = values[index]?.trim() || "";
           });
 
-          return obj;
+          // Only return the fields you need
+          return {
+            name: obj.name,
+            url: obj.url,
+            username: obj.username,
+            note: obj.note,
+          };
         })
         .filter(Boolean);
 
