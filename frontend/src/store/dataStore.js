@@ -6,7 +6,6 @@ const useUserStore = create((set) => ({
   error: null,
 
   fetchUsers: async () => {
-    console.log("fetching users");
     set({ loading: true, error: null });
 
     try {
