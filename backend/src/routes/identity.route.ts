@@ -69,7 +69,12 @@ router.get("/map", async (req: any, res: any) => {
 			},
 		});
 
-		return res.status(200).json(identities);
+		const response = identities.map((identity) => ({
+			...identity,
+			connections: identity.connections.map((connection) => connection.account),
+		}));
+
+		return res.status(200).json(response);
 	} catch (error) {
 		console.error("Error in GET /identities/map", error);
 		return res.status(500).json({ message: "Error retrieving identities" });
