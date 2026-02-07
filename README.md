@@ -55,12 +55,8 @@ Required environment variables (or use defaults):
 
 ```sh
 PORT=8081
-POSTGRES_HOST=localhost
-POSTGRES_PORT=5432
-POSTGRES_USER=demouser
-POSTGRES_PASSWORD=demopass
-POSTGRES_DB=demodb
 DATABASE_URL=postgres://demouser:demopass@postgres:5432/demodb
+GEMINI_API_KEY=key
 ```
 
 #### Frontend Setup
