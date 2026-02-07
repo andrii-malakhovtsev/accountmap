@@ -1,70 +1,57 @@
 import React from 'react';
 
 const SidebarConnectionForm = ({ form, errors, onChange }) => {
-  const getConnectionPlaceholder = () => {
-    switch (form.type) {
-      case 'mail': return 'e.g. Gmail, ProtonMail';
-      case 'phone': return 'e.g. Personal iPhone';
-      case 'auth': return 'e.g. Yubikey, Authy';
-      default: return 'Connection Name';
-    }
-  };
+  const types = ['mail', 'phone', 'auth'];
 
-  const getInputClass = (field) => {
-    const base = "w-full bg-white/5 border rounded-lg px-4 py-3 text-sm text-white focus:outline-none transition-all";
-    if (!form[field]) return `${base} border-white/10 focus:border-blue-500/50`;
-    return errors[field] 
-      ? `${base} border-red-500/50 bg-red-500/5` 
-      : `${base} border-green-500/50 bg-green-500/5`;
+  const getPlaceholder = () => {
+    if (form.type === 'mail') return 'user@domain.com';
+    if (form.type === 'phone') return '+15550000000';
+    return 'Enter auth label...'; // No +1 for auth
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+    <div className="space-y-5 animate-in slide-in-from-right duration-300">
       <div className="space-y-2">
-        <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">Service Type</label>
-        <select 
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none appearance-none cursor-pointer"
-          value={form.type}
-          onChange={e => onChange('type', e.target.value)}
-        >
-          <option value="mail" className="bg-[#1a1a1a]">Mail</option>
-          <option value="phone" className="bg-[#1a1a1a]">Phone</option>
-          <option value="auth" className="bg-[#1a1a1a]">Auth App</option>
-        </select>
+        <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Connection Type</label>
+        <div className="flex gap-2">
+          {types.map(t => (
+            <button
+              key={t}
+              onClick={() => onChange('type', t)}
+              className={`flex-1 py-2 rounded-lg text-[10px] font-bold uppercase border transition-all ${form.type === t ? 'bg-blue-600 border-blue-400 text-white shadow-lg' : 'bg-white/5 border-white/10 text-gray-400 hover:border-white/20'}`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-2">
-        <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1 flex justify-between">
-          Connection Name {errors.name && form.name && <span className="text-red-500 lowercase font-normal italic text-[9px]">Required</span>}
+        <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">
+          {form.type === 'mail' ? 'Email Address' : form.type === 'phone' ? 'Phone Number' : 'Auth Identifier'}
         </label>
         <input 
-          className={getInputClass('name')}
-          placeholder={getConnectionPlaceholder()}
-          value={form.name}
-          onChange={e => onChange('name', e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1 flex justify-between">
-          Value {errors.value && form.value && <span className="text-red-500 lowercase font-normal italic text-[9px]">Invalid format</span>}
-        </label>
-        <input 
-          className={getInputClass('value')}
-          placeholder={form.type === 'phone' ? '+1 (555) 000-0000' : 'user@example.com'}
+          type="text"
           value={form.value}
-          onChange={e => onChange('value', e.target.value)}
+          onChange={(e) => onChange('value', e.target.value)}
+          placeholder={getPlaceholder()}
+          className={`w-full bg-white/5 border rounded-lg px-4 py-3 text-sm text-white focus:outline-none transition-all ${errors.value ? 'border-red-500 bg-red-500/5' : 'border-white/10 focus:border-blue-500'}`}
         />
+        {errors.value && (
+          <p className="text-[9px] text-red-500 font-bold uppercase tracking-tighter ml-1 animate-pulse">
+            {errors.value}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2">
-        <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">Internal Notes</label>
+        <label className="text-[10px] uppercase font-black text-gray-500 tracking-widest ml-1">Internal Notes</label>
         <textarea 
-          rows="4"
-          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:border-blue-500/50 resize-none outline-none"
-          placeholder="Security context..."
           value={form.notes}
-          onChange={e => onChange('notes', e.target.value)}
+          onChange={(e) => onChange('notes', e.target.value)}
+          rows="4"
+          placeholder="Optional context..."
+          className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 resize-none transition-colors"
         />
       </div>
     </div>
