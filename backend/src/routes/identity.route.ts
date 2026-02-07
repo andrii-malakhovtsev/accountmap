@@ -70,10 +70,27 @@ router.get("/map", async (req: any, res: any) => {
 			},
 		});
 
+		const accounts = await prisma.account.findMany({
+			where: { userid: user.id },
+			include: { connections: true },
+		});
+		const unlinkedAccounts = accounts
+			.filter((account) => account.connections.length === 0)
+			.map(({ connections, ...account }) => account);
+
 		const response = identities.map((identity) => ({
 			...identity,
 			connections: identity.connections.map((connection) => connection.account),
 		}));
+
+		response.push({
+			id: "",
+			value: "",
+			type: "",
+			notes: null,
+			userid: user.id,
+			connections: unlinkedAccounts,
+		} as any);
 
 		return res.status(200).json(response);
 	} catch (error) {

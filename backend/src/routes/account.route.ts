@@ -236,6 +236,27 @@ async function delete_connections(accountId: string) {
 	await prisma.connections.deleteMany({ where: { accountId } });
 }
 
+// DELETE /unlinked
+// Deletes all accounts for the default user that have no connections
+router.delete("/unlinked", async (_req: any, res: any) => {
+	try {
+		const user = await get_default_user();
+		if (!user) return res.status(500).json({ message: "Default user not found" });
+
+		const removed = await prisma.account.deleteMany({
+			where: {
+				userid: user.id,
+				connections: { none: {} },
+			},
+		});
+
+		return res.status(200).json({ message: "Unlinked accounts deleted", count: removed.count });
+	} catch (error) {
+		console.error("Error in DELETE /accounts/unlinked", error);
+		return res.status(500).json({ message: "Error deleting unlinked accounts" });
+	}
+});
+
 // DELETE /:id
 // Deletes an account and its connections
 router.delete("/:id", async (req: any, res: any) => {
