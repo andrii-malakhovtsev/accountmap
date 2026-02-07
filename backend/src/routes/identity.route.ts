@@ -76,6 +76,87 @@ router.get("/map", async (req: any, res: any) => {
 	}
 });
 
+// PATCH /:id
+// Updates an identity's value and/or type
+router.patch("/:id", async (req: any, res: any) => {
+	const identityId = req.params.id;
+	const { value, type } = req.body || {};
+
+	if (!identityId) return res.status(400).json({ message: "Missing identity id in params" });
+	if (value === undefined && type === undefined)
+		return res.status(400).json({ message: "Provide value and/or type to update" });
+
+	if (value !== undefined && typeof value !== "string")
+		return res.status(400).json({ message: "Field value must be a string" });
+	if (type !== undefined && typeof type !== "string")
+		return res.status(400).json({ message: "Field type must be a string" });
+
+	try {
+		const user = await get_default_user();
+		if (!user) return res.status(500).json({ message: "Default user not found" });
+
+		const existing = await prisma.identity.findUnique({ where: { id: identityId } });
+		if (!existing) return res.status(404).json({ message: "Identity not found" });
+		if (existing.userid !== user.id)
+			return res.status(403).json({ message: "Identity ownership mismatch" });
+
+		const updateData: any = {};
+		if (value !== undefined) updateData.value = String(value).trim();
+		if (type !== undefined) {
+			const typeVal = String(type).toUpperCase();
+			const validTypes = ["MAIL", "PHONE", "AUTH"];
+			if (!validTypes.includes(typeVal))
+				return res
+					.status(400)
+					.json({ message: `Invalid type. Must be one of: ${validTypes.join(", ")}` });
+			updateData.type = typeVal;
+		}
+
+		const updated = await prisma.identity.update({
+			where: { id: identityId },
+			data: updateData,
+		});
+
+		return res.status(200).json({
+			message: "Identity updated",
+			id: updated.id,
+			value: updated.value,
+			type: updated.type,
+			userid: updated.userid,
+		});
+	} catch (error) {
+		console.error("Error in PATCH /identities/:id", error);
+		return res.status(500).json({ message: "Error updating identity" });
+	}
+});
+
+// DELETE /:id
+// Deletes an identity and its connections
+router.delete("/:id", async (req: any, res: any) => {
+	const identityId = req.params.id;
+
+	if (!identityId) return res.status(400).json({ message: "Missing identity id in params" });
+
+	try {
+		const user = await get_default_user();
+		if (!user) return res.status(500).json({ message: "Default user not found" });
+
+		const existing = await prisma.identity.findUnique({ where: { id: identityId } });
+		if (!existing) return res.status(404).json({ message: "Identity not found" });
+		if (existing.userid !== user.id)
+			return res.status(403).json({ message: "Identity ownership mismatch" });
+
+		// Remove connections first to satisfy FK constraints
+		await prisma.connections.deleteMany({ where: { identityId } });
+		await prisma.identity.delete({ where: { id: identityId } });
+
+		return res.status(200).json({ message: "Identity deleted", id: identityId });
+	} catch (error) {
+		console.error("Error in DELETE /identities/:id", error);
+		return res.status(500).json({ message: "Error deleting identity" });
+	}
+});
+
 // GET /:id
 // Retrieves an identity and all its connections (linked accounts)
 router.get("/:id", async (req: any, res: any) => {
