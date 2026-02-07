@@ -1,8 +1,8 @@
 // Bring in required modules and libraries
-import { json } from "express";
-import cors from "cors";
 import { prisma } from "./lib/prisma";
 import { app, get_default_user } from "./lib/utils";
+
+import "./endpoints";
 
 const DEFAULT_USER = "default";
 const PORT = process.env.PORT || 8081;
@@ -13,8 +13,6 @@ const PORT = process.env.PORT || 8081;
 // the response object (res), and the next middleware function in the application’s request-response cycle.
 // Here, we are using CORS to allow cross-origin requests and express.json() to parse JSON request bodies.
 // In simple terms its a kind of "gatekeeper" that processes incoming requests before they reach our route handlers.
-app.use(cors());
-app.use(json());
 
 // Routes
 
@@ -24,8 +22,6 @@ app.get("/", (_, res) => {
     message: "Welcome to the Full-Stack Demo API",
   });
 });
-
-
 
 async function load_default_user() {
   const user = await get_default_user();
