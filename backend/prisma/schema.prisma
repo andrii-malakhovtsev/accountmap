@@ -33,11 +33,11 @@ model User {
 }
 
 model Account {
-  id       Int     @id @default(autoincrement())
-  name     String // Cleaned via Regex (e.g., "NETFLIX", "CHASE")
-  username String? // The login handle used for this specific account
-  notes    String? // Your "Moving Story" notes/user-added data
-  category String?
+  id         String       @id @default(uuid())
+  name       String // Cleaned via Regex (e.g., "NETFLIX", "CHASE")
+  username   String? // The login handle used for this specific account
+  notes      String? // Your "Moving Story" notes/user-added data
+  categories Categories[]
 
   user   User   @relation(fields: [userid], references: [id])
   userid String
@@ -55,10 +55,9 @@ model Connections {
 }
 
 model Identity {
-  id    Int    @id @default(autoincrement())
+  id    String       @id @default(uuid())
   value String // The actual information
   type  IdentityType // "Type of Information Stored"
 
-  account   Account @relation(fields: [accountid], references: [id])
-  accountid Int
+  connections Connections[]
 }
