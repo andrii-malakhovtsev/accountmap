@@ -85,11 +85,12 @@ const Sidebar = ({ isOpen, onClose, viewMode, selectedAccount, allNodes, onSelec
             connections={associatedNodes} 
             allNodes={allNodes} 
             onSelectAccount={onSelectAccount} 
+            onAddClick={() => onSelectAccount(selectedAccount, 'createConnection')}
           />
         )}
       </div>
 
-      <div className="p-4 border-t border-white/5 bg-black/20">
+      <div className="p-4 border-t border-white/5 bg-black/20 space-y-3">
         <button 
           onClick={handleSaveClick}
           disabled={!isFormValid && viewMode !== 'view'}
@@ -97,6 +98,15 @@ const Sidebar = ({ isOpen, onClose, viewMode, selectedAccount, allNodes, onSelec
         >
           {viewMode === 'view' ? "Save Changes" : (viewMode === 'createAccount' ? "Create Account" : "Create Connection")}
         </button>
+
+        {viewMode === 'view' && (
+          <button 
+            onClick={() => console.log("Delete triggered")}
+            className="w-full py-3 bg-transparent border border-red-900/30 hover:bg-red-900/20 text-red-500/70 hover:text-red-500 text-[10px] font-black rounded-md transition uppercase tracking-[0.2em]"
+          >
+            Delete {selectedAccount?.isConnection ? "Connection" : "Account"}
+          </button>
+        )}
       </div>
     </aside>
   );

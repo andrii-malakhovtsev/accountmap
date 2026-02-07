@@ -1,7 +1,7 @@
 import React from 'react';
 import { getIconUrl } from './../../src/utilities/iconService';
 
-const SidebarView = ({ selectedAccount, connections, allNodes, onSelectAccount }) => {
+const SidebarView = ({ selectedAccount, connections, allNodes, onSelectAccount, onAddClick }) => {
   const isHub = selectedAccount?.isHub;
 
   return (
@@ -26,6 +26,15 @@ const SidebarView = ({ selectedAccount, connections, allNodes, onSelectAccount }
               </div>
             </div>
           ))}
+
+          <button 
+            onClick={onAddClick}
+            className="w-full py-4 border-2 border-dashed border-white/5 hover:border-blue-500/50 hover:bg-blue-500/5 rounded-xl flex items-center justify-center transition-all group mt-2"
+          >
+            <span className="text-[10px] font-black uppercase tracking-widest text-gray-500 group-hover:text-blue-400">
+              + Link {isHub ? "Account" : "Connection"}
+            </span>
+          </button>
         </div>
       </div>
       <div className="space-y-2">
