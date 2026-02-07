@@ -1,59 +1,80 @@
-import React, { useMemo, useEffect, useState } from 'react';
+import React, { useMemo, useEffect, useState, useRef } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
-import { getIconUrl, loadImage } from './../utilities/iconService';
+import { loadImage } from './../utilities/iconService';
 
-const MapView = () => {
+const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
   const [iconCache, setIconCache] = useState({});
+  const fgRef = useRef();
 
   const graphData = useMemo(() => ({
-    nodes: [
-      { id: '1', name: 'Google' },
-      { id: '2', name: 'Stripe' },
-      { id: '3', name: 'Discord' },
-      { id: '4', name: 'GitHub' },
-      { id: '5', name: 'Amazon AWS' },
-      { id: '6', name: 'Slack' },
-      { id: '7', name: 'Vercel' },
-      { id: '8', name: 'Tailwind CSS' },
-      { id: '9', name: 'Cloudflare' },
-      { id: '10', name: 'Auth0' },
-      { id: '11', name: 'Notion' },
-      { id: '12', name: 'Figma' },
-      { id: '13', name: 'OpenAI' },
-      { id: '14', name: 'Datadog' },
-      { id: '15', name: 'Unknown Service' }
-    ],
-    links: [
-      { source: '1', target: '2' }, { source: '1', target: '5' },
-      { source: '2', target: '4' }, { source: '5', target: '9' },
-      { source: '7', target: '9' }, { source: '13', target: '5' },
-      { source: '14', target: '15' }, { source: '11', target: '12' }
-    ]
-  }), []);
+    nodes,
+    links
+  }), [nodes, links]);
 
   useEffect(() => {
-    graphData.nodes.forEach(async (node) => {
+    if (selectedId && fgRef.current) {
+      const node = nodes.find(n => n.id === selectedId);
+      if (node && node.x !== undefined) {
+        fgRef.current.centerAt(node.x, node.y, 600);
+        fgRef.current.zoom(3, 600);
+      }
+    }
+  }, [selectedId, nodes]);
+
+  useEffect(() => {
+    nodes.forEach(async (node) => {
       if (!iconCache[node.id]) {
-        const url = getIconUrl(node.name);
-        const img = await loadImage(url);
-        setIconCache(prev => ({ ...prev, [node.id]: img }));
+        try {
+          const img = await loadImage(node.name); 
+          setIconCache(prev => ({ ...prev, [node.id]: img }));
+        } catch (e) {
+          console.error(`Failed to load icon for ${node.name}`);
+        }
       }
     });
-  }, [graphData.nodes]);
+  }, [nodes, iconCache]);
 
   return (
     <div className="w-full h-full relative bg-[#111]">
       <ForceGraph2D
+        ref={fgRef}
         graphData={graphData}
         backgroundColor="#111111"
         nodeRelSize={4}
+        onNodeClick={(node) => onSelectAccount(node)}
+        warmupTicks={100}
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.3}
         nodeCanvasObject={(node, ctx, globalScale) => {
-          const size = 8; 
+          const isSelected = node.id === selectedId;
+          const isHub = node.isHub;
+          const size = isHub ? 14 : 8; 
           const img = iconCache[node.id];
+
+          if (isSelected) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size + 6, 0, 2 * Math.PI, false);
+            ctx.fillStyle = isHub ? 'rgba(59, 130, 246, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+            ctx.fill();
+            
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size + 3, 0, 2 * Math.PI, false);
+            ctx.strokeStyle = isHub ? '#3b82f6' : '#ffffff';
+            ctx.lineWidth = 2 / globalScale;
+            ctx.stroke();
+          }
+
+          if (isHub && !isSelected) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size + 2, 0, 2 * Math.PI, false);
+            ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
+            ctx.lineWidth = 1 / globalScale;
+            ctx.stroke();
+          }
 
           ctx.beginPath();
           ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-          ctx.fillStyle = '#FFFFFF';
+          ctx.fillStyle = isHub ? '#1e1e1e' : '#FFFFFF';
           ctx.fill();
 
           if (img) {
@@ -65,19 +86,28 @@ const MapView = () => {
             ctx.restore();
           }
 
-          if (globalScale > 1.5) {
+          if (globalScale > 1.2 || isSelected) {
             const label = node.name;
-            const fontSize = 10 / globalScale; 
-            ctx.font = `${fontSize}px Inter, Sans-Serif`;
+            const fontSize = (isHub ? 13 : 10) / globalScale; 
+            ctx.font = `${isHub ? '600' : '400'} ${fontSize}px Inter, Sans-Serif`;
             ctx.textAlign = 'center';
-            ctx.fillStyle = '#9ca3af';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = isSelected ? '#3b82f6' : (isHub ? '#60a5fa' : '#9ca3af');
             ctx.fillText(label, node.x, node.y + size + 5); 
           }
         }}
-        linkColor={() => '#333'}
+        nodePointerAreaPaint={(node, color, ctx) => {
+          const size = node.isHub ? 14 : 8;
+          ctx.fillStyle = color;
+          ctx.beginPath();
+          ctx.arc(node.x, node.y, size + 2, 0, 2 * Math.PI, false);
+          ctx.fill();
+        }}
+        linkColor={() => 'rgba(255, 255, 255, 0.08)'}
         linkWidth={1.5}
-        linkDirectionalParticles={2} // Adds moving "data" dots
-        linkDirectionalParticleSpeed={0.005}
+        linkDirectionalParticles={1}
+        linkDirectionalParticleSpeed={0.004}
+        linkDirectionalParticleWidth={2}
       />
     </div>
   );
