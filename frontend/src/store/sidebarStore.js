@@ -80,6 +80,44 @@ const useSidebarStore = create((set) => ({
 		}
 	},
 
+	deleteAccount: async (accountId) => {
+		set({ loading: true, error: null, success: false });
+		try {
+			const res = await fetch(`http://localhost:8081/api/accounts/${accountId}`, {
+				method: "DELETE",
+			});
+
+			if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+			const data = await res.json();
+			await useUserStore.getState().fetchUsers();
+			set({ loading: false, success: true });
+			return data;
+		} catch (err) {
+			set({ error: err.message || "Failed to delete account", loading: false });
+			throw err;
+		}
+	},
+
+	deleteIdentity: async (identityId) => {
+		set({ loading: true, error: null, success: false });
+		try {
+			const res = await fetch(`http://localhost:8081/api/identities/${identityId}`, {
+				method: "DELETE",
+			});
+
+			if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+			const data = await res.json();
+			await useUserStore.getState().fetchUsers();
+			set({ loading: false, success: true });
+			return data;
+		} catch (err) {
+			set({ error: err.message || "Failed to delete identity", loading: false });
+			throw err;
+		}
+	},
+
 	resetState: () => set({ loading: false, error: null, success: false }),
 }));
 

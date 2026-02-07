@@ -25,10 +25,13 @@ const Sidebar = ({
   const [errors, setErrors] = useState({});
   const [isLinking, setIsLinking] = useState(false);
   const [linkTargetId, setLinkTargetId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const {
     createAccount,
     createConnection,
     linkConnection,
+    deleteAccount,
+    deleteIdentity,
     loading,
     error,
     success,
@@ -46,6 +49,12 @@ const Sidebar = ({
       setLinkTargetId(null);
     }
   }, [isOpen, viewMode, selectedAccount]);
+
+  useEffect(() => {
+    if (!isOpen || viewMode !== "view" || isLinking) {
+      setConfirmDelete(false);
+    }
+  }, [isOpen, viewMode, isLinking, selectedAccount]);
 
   const validate = (name, value, currentType) => {
     let error = "";
@@ -180,6 +189,26 @@ const Sidebar = ({
     }
   };
 
+  const handleDelete = async () => {
+    if (!selectedAccount || loading) return;
+    if (!confirmDelete) {
+      setConfirmDelete(true);
+      return;
+    }
+
+    try {
+      if (isConnection) {
+        await deleteIdentity(selectedAccount.id);
+      } else {
+        await deleteAccount(selectedAccount.id);
+      }
+      setConfirmDelete(false);
+      onClose();
+    } catch (err) {
+      console.error("Error deleting:", err);
+    }
+  };
+
   useEffect(() => {
     if (success) {
       resetState();
@@ -283,8 +312,12 @@ const Sidebar = ({
             <button className="w-full py-3 bg-white/5 text-white text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-white/10 transition-colors">
               Save
             </button>
-            <button className="w-full py-3 border border-red-900/30 text-red-500/70 text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-red-900/10 transition-colors">
-              Delete
+            <button
+              onClick={handleDelete}
+              disabled={loading}
+              className={`w-full py-3 border text-[10px] font-black rounded-md uppercase tracking-[0.2em] transition-colors ${confirmDelete ? "border-red-500/60 text-red-300 bg-red-900/20 hover:bg-red-900/30" : "border-red-900/30 text-red-500/70 hover:bg-red-900/10"} ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
+            >
+              {confirmDelete ? "Click again to delete" : "Delete"}
             </button>
           </>
         )}
