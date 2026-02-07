@@ -64,9 +64,17 @@ const Sidebar = ({ isOpen, selectedAccount, allNodes = [], onSelectAccount }) =>
         <div className="p-6 space-y-6">
           {selectedAccount && (
             <div className="space-y-3">
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">
-                {isHub ? `Impacted Accounts (${connectionCount})` : `Linked Connections (${connectionCount})`}
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">
+                  {isHub ? `Impacted Accounts (${connectionCount})` : `Linked Connections (${connectionCount})`}
+                </label>
+                {!isHub && (
+                  <button className="text-[9px] font-bold bg-blue-600/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30 hover:bg-blue-600/40 transition-all uppercase tracking-tighter">
+                    + Add Connection
+                  </button>
+                )}
+              </div>
+
               <div className="flex flex-col gap-2">
                 {connections.map((item) => {
                   const nodeToSelect = isHub 
@@ -104,6 +112,12 @@ const Sidebar = ({ isOpen, selectedAccount, allNodes = [], onSelectAccount }) =>
                       Critical: No recovery assets linked
                     </p>
                   </div>
+                )}
+
+                {isHub && (
+                  <button className="w-full py-2 mt-1 border border-dashed border-white/10 rounded-lg text-[9px] font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all uppercase tracking-widest">
+                    + Add Account to Hub
+                  </button>
                 )}
               </div>
             </div>
