@@ -18,9 +18,6 @@ yarn.lock
 *~
 .DS_Store
 
-# Docker
-.dockerignore
-
 # Build outputs
 frontend/build/
 backend/dist/
