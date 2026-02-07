@@ -1,21 +1,19 @@
 import React from 'react';
 import { getIconUrl } from './../src/utilities/iconService';
 
-const Sidebar = ({ isOpen, selectedAccount, allNodes = [] }) => {
+const Sidebar = ({ isOpen, selectedAccount, allNodes = [], onSelectAccount }) => {
   const isHub = selectedAccount?.isHub;
 
-  // Placeholder for when nothing is selected
   const activeData = selectedAccount || {
     name: "Select an Account",
     notes: "Please select an entity from the map or list to view detailed security parameters.",
-    hubIds: []
   };
 
-  const linkedHubs = (activeData.hubIds || [])
-    .map(hId => allNodes.find(n => n.id === hId))
-    .filter(Boolean);
+  const connections = isHub 
+    ? (selectedAccount.accounts || [])
+    : allNodes.filter(node => node.isHub && node.accounts?.some(acc => acc.id === selectedAccount?.id));
 
-  const connectionCount = linkedHubs.length;
+  const connectionCount = connections.length;
 
   let statusLabel = "SECURE";
   let statusColor = "text-green-500";
@@ -58,33 +56,68 @@ const Sidebar = ({ isOpen, selectedAccount, allNodes = [] }) => {
           <span className={`text-[10px] font-black uppercase tracking-widest mt-1 ${statusColor}`}>
             {statusLabel}
           </span>
+          {isHub && (
+            <span className="text-gray-500 text-[10px] font-mono mt-2">{activeData.value}</span>
+          )}
         </div>
 
         <div className="p-6 space-y-6">
-          {!isHub && selectedAccount && (
+          {selectedAccount && (
             <div className="space-y-3">
-              <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">
-                Linked Connections ({connectionCount})
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {linkedHubs.map((hub) => (
-                  <div key={hub.id} className="flex items-center gap-2 bg-white/5 border border-white/10 px-3 py-1.5 rounded-lg group hover:bg-white/10 transition-colors">
-                    <img 
-                      src={getIconUrl(hub.name)}
-                      className="w-4 h-4 object-contain brightness-90" 
-                      alt="" 
-                    />
-                    <span className="text-[10px] text-gray-300 font-mono">
-                      {hub.label || hub.name}
-                    </span>
-                  </div>
-                ))}
-                {connectionCount === 0 && (
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-[10px] uppercase tracking-widest text-gray-500 font-bold ml-1">
+                  {isHub ? `Impacted Accounts (${connectionCount})` : `Linked Connections (${connectionCount})`}
+                </label>
+                {!isHub && (
+                  <button className="text-[9px] font-bold bg-blue-600/20 text-blue-400 px-2 py-1 rounded border border-blue-500/30 hover:bg-blue-600/40 transition-all uppercase tracking-tighter">
+                    + Add Connection
+                  </button>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {connections.map((item) => {
+                  const nodeToSelect = isHub 
+                    ? allNodes.find(n => n.id === item.id) 
+                    : item;
+
+                  return (
+                    <div 
+                      key={item.id} 
+                      onClick={() => onSelectAccount(nodeToSelect)}
+                      className="flex items-center gap-3 bg-white/5 border border-white/10 px-3 py-2 rounded-lg group hover:bg-blue-600/20 hover:border-blue-500/50 cursor-pointer transition-all"
+                    >
+                      <div className="w-6 h-6 bg-white rounded p-1 flex items-center justify-center">
+                        <img 
+                          src={getIconUrl(item.name)}
+                          className="w-full h-full object-contain" 
+                          alt="" 
+                        />
+                      </div>
+                      <div className="flex flex-col overflow-hidden">
+                        <span className="text-[10px] text-gray-200 font-bold truncate">
+                          {item.name}
+                        </span>
+                        <span className="text-[9px] text-gray-500 font-mono truncate">
+                          {isHub ? item.username : (item.value || item.type)}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+                
+                {!isHub && connectionCount === 0 && (
                   <div className="w-full p-3 border border-red-500/20 bg-red-500/5 rounded-lg text-center">
                     <p className="text-[10px] text-red-500 font-bold uppercase tracking-tighter animate-pulse">
                       Critical: No recovery assets linked
                     </p>
                   </div>
+                )}
+
+                {isHub && (
+                  <button className="w-full py-2 mt-1 border border-dashed border-white/10 rounded-lg text-[9px] font-bold text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all uppercase tracking-widest">
+                    + Add Account to Hub
+                  </button>
                 )}
               </div>
             </div>

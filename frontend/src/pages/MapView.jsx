@@ -60,7 +60,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
             ctx.beginPath();
             ctx.arc(node.x, node.y, size + 3, 0, 2 * Math.PI, false);
             ctx.strokeStyle = isHub ? '#3b82f6' : '#ffffff';
-            ctx.lineWidth = 2 / globalScale;
+            ctx.lineWidth = 3 / globalScale;
             ctx.stroke();
           }
 
@@ -68,31 +68,47 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
             ctx.beginPath();
             ctx.arc(node.x, node.y, size + 2, 0, 2 * Math.PI, false);
             ctx.strokeStyle = 'rgba(59, 130, 246, 0.5)';
-            ctx.lineWidth = 1 / globalScale;
+            ctx.lineWidth = 2 / globalScale;
             ctx.stroke();
           }
+
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+          ctx.shadowBlur = 6 / globalScale;
+          ctx.shadowOffsetX = 0;
+          ctx.shadowOffsetY = 2 / globalScale;
 
           ctx.beginPath();
           ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
           ctx.fillStyle = isHub ? '#1e1e1e' : '#FFFFFF';
           ctx.fill();
 
+          ctx.shadowColor = 'transparent';
+
+          ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+          ctx.lineWidth = 1 / globalScale;
+          ctx.stroke();
+
           if (img) {
+            const padding = 0.7;
+            const iconSize = size * padding;
             ctx.save();
-            ctx.beginPath();
-            ctx.arc(node.x, node.y, size, 0, 2 * Math.PI, false);
-            ctx.clip();
-            ctx.drawImage(img, node.x - size, node.y - size, size * 2, size * 2);
+            ctx.drawImage(
+              img, 
+              node.x - iconSize, 
+              node.y - iconSize, 
+              iconSize * 2, 
+              iconSize * 2
+            );
             ctx.restore();
           }
 
           if (globalScale > 1.2 || isSelected) {
             const label = node.name;
-            const fontSize = (isHub ? 13 : 10) / globalScale; 
-            ctx.font = `${isHub ? '600' : '400'} ${fontSize}px Inter, Sans-Serif`;
+            const fontSize = (isHub ? 14 : 11) / globalScale;
+            ctx.font = `${isHub ? '700' : '500'} ${fontSize}px Inter, Sans-Serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'top';
-            ctx.fillStyle = isSelected ? '#3b82f6' : (isHub ? '#60a5fa' : '#9ca3af');
+            ctx.fillStyle = isSelected ? '#3b82f6' : (isHub ? '#60a5fa' : '#e5e7eb');
             ctx.fillText(label, node.x, node.y + size + 5); 
           }
         }}
@@ -103,11 +119,12 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           ctx.arc(node.x, node.y, size + 2, 0, 2 * Math.PI, false);
           ctx.fill();
         }}
-        linkColor={() => 'rgba(255, 255, 255, 0.08)'}
-        linkWidth={1.5}
-        linkDirectionalParticles={1}
-        linkDirectionalParticleSpeed={0.004}
-        linkDirectionalParticleWidth={2}
+        linkColor={() => 'rgba(255, 255, 255, 0.15)'}
+        linkWidth={5}
+        linkDirectionalParticles={2}
+        linkDirectionalParticleSpeed={0.005}
+        linkDirectionalParticleWidth={6}
+        linkDirectionalParticleColor={() => '#3b82f6'}
       />
     </div>
   );

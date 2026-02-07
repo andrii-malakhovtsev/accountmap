@@ -7,6 +7,7 @@ const KEYWORD_MAP = {
   'authapp': 'googleauthenticator',
   'authenticator': 'authy',
   'sms': 'twilio',
+  'aws': 'amazonwebservices'
 };
 
 const getSlug = (name) => {
@@ -29,6 +30,7 @@ export const getIconUrls = (name) => {
   return [
     `https://cdn.simpleicons.org/${slug}`,
     `https://logo.clearbit.com/${domain}`,
+    `https://api.brandfetch.io/v2/brands/${domain}/icon`,
     `https://www.google.com/s2/favicons?sz=128&domain=${domain}`,
   ];
 };

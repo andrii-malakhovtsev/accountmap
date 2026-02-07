@@ -3,7 +3,6 @@ import { getIconUrl } from './../utilities/iconService';
 
 const ListView = ({ accounts = [], allNodes = [], onSelectAccount, selectedId }) => {
   const [viewMode, setViewMode] = useState('accounts');
-
   const hubs = allNodes.filter(n => n.isHub);
 
   return (
@@ -45,11 +44,11 @@ const ListView = ({ accounts = [], allNodes = [], onSelectAccount, selectedId })
           {(viewMode === 'accounts' ? accounts : hubs).map((item) => {
             const isSelected = selectedId === item.id;
             
-            const linkedHubs = (item.hubIds || [])
-              .map(hId => allNodes.find(n => n.id === hId))
-              .filter(Boolean);
+            const linkedHubs = viewMode === 'accounts' 
+              ? hubs.filter(h => h.accounts?.some(acc => acc.id === item.id))
+              : [];
 
-            const impactedAccounts = accounts.filter(acc => acc.hubIds?.includes(item.id));
+            const impactedAccounts = viewMode === 'hubs' ? (item.accounts || []) : [];
             const connectionCount = viewMode === 'accounts' ? linkedHubs.length : impactedAccounts.length;
 
             let statusLabel = item.isHub ? "Connection" : "Secure";
@@ -87,27 +86,27 @@ const ListView = ({ accounts = [], allNodes = [], onSelectAccount, selectedId })
                     />
                   </div>
                   <span className={`font-semibold ${isSelected ? 'text-blue-400' : 'text-gray-200'}`}>
-                    {item.label || item.name}
+                    {item.name}
                   </span>
                 </td>
 
                 <td className="px-6 py-4 text-sm text-gray-400 font-mono">
-                  {viewMode === 'accounts' ? item.username : (item.type || 'System')}
+                  {viewMode === 'accounts' ? item.username : (item.value || item.type)}
                 </td>
 
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-2 min-h-[28px]">
                     {viewMode === 'accounts' ? (
                       connectionCount > 0 ? (
-                        linkedHubs.map((hub, idx) => (
+                        linkedHubs.map((hub) => (
                           <div 
-                            key={idx} 
-                            title={hub.name}
-                            className="w-7 h-7 rounded-md bg-white/5 border border-white/10 flex items-center justify-center"
+                            key={hub.id} 
+                            title={hub.value}
+                            className="w-7 h-7 rounded-md bg-white flex items-center justify-center p-1"
                           >
                             <img 
                               src={getIconUrl(hub.name)} 
-                              className="w-4 h-4 object-contain brightness-75" 
+                              className="w-full h-full object-contain" 
                               alt=""
                             />
                           </div>
@@ -117,9 +116,9 @@ const ListView = ({ accounts = [], allNodes = [], onSelectAccount, selectedId })
                       )
                     ) : (
                       <div className="flex -space-x-2">
-                        {impactedAccounts.slice(0, 6).map((acc, idx) => (
+                        {impactedAccounts.slice(0, 6).map((acc) => (
                           <div 
-                            key={idx} 
+                            key={acc.id} 
                             className="w-7 h-7 rounded-full bg-white border-2 border-[#111] p-1 flex items-center justify-center shadow-lg"
                           >
                             <img src={getIconUrl(acc.name)} className="w-full h-full object-contain" alt={acc.name} />
