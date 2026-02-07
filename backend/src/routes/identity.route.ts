@@ -1,4 +1,5 @@
 import express from "express";
+import { IdentityType } from "../../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { get_default_user } from "../lib/utils";
 
@@ -21,8 +22,8 @@ router.post("/add", async (req: any, res: any) => {
 		if (!user) return res.status(500).json({ message: "Default user not found" });
 
 		// Validate and normalize type to enum
-		const typeVal = String(type).toUpperCase();
-		const validTypes = ["MAIL", "PHONE", "AUTH"];
+		const typeVal = String(type).toUpperCase() as IdentityType;
+		const validTypes: IdentityType[] = ["MAIL", "PHONE", "AUTH"];
 		if (!validTypes.includes(typeVal))
 			return res
 				.status(400)
@@ -69,7 +70,12 @@ router.get("/map", async (req: any, res: any) => {
 			},
 		});
 
-		return res.status(200).json(identities);
+		const response = identities.map((identity) => ({
+			...identity,
+			connections: identity.connections.map((connection) => connection.account),
+		}));
+
+		return res.status(200).json(response);
 	} catch (error) {
 		console.error("Error in GET /identities/map", error);
 		return res.status(500).json({ message: "Error retrieving identities" });
@@ -103,8 +109,8 @@ router.patch("/:id", async (req: any, res: any) => {
 		const updateData: any = {};
 		if (value !== undefined) updateData.value = String(value).trim();
 		if (type !== undefined) {
-			const typeVal = String(type).toUpperCase();
-			const validTypes = ["MAIL", "PHONE", "AUTH"];
+			const typeVal = String(type).toUpperCase() as IdentityType;
+			const validTypes: IdentityType[] = ["MAIL", "PHONE", "AUTH"];
 			if (!validTypes.includes(typeVal))
 				return res
 					.status(400)

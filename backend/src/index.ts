@@ -2,7 +2,6 @@
 import { prisma } from "./lib/prisma";
 import { app, get_default_user } from "./lib/utils";
 
-import "./endpoints";
 import routes from "./routes/index.route";
 
 const DEFAULT_USER = "default";
