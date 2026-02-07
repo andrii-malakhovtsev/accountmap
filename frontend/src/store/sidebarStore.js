@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import useUserStore from "./dataStore"
 
 const useSidebarStore = create((set) => ({
 	loading: false,
@@ -19,6 +20,7 @@ const useSidebarStore = create((set) => ({
 			if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
 			const data = await res.json();
+			await useUserStore.getState().fetchUsers()
 			set({ loading: false, success: true });
 			return data;
 		} catch (err) {
@@ -41,6 +43,8 @@ const useSidebarStore = create((set) => ({
 			if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
 			const data = await res.json();
+			await useUserStore.getState().fetchUsers()
+
 			set({ loading: false, success: true });
 			return data;
 		} catch (err) {
@@ -67,6 +71,7 @@ const useSidebarStore = create((set) => ({
 			if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
 
 			const data = await res.json();
+			await useUserStore.getState().fetchUsers()
 			set({ loading: false, success: true });
 			return data;
 		} catch (err) {
