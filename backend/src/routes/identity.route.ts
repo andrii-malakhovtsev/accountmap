@@ -169,7 +169,6 @@ router.delete("/:id", async (req: any, res: any) => {
 		if (existing.userid !== user.id)
 			return res.status(403).json({ message: "Identity ownership mismatch" });
 
-		// Remove connections first to satisfy FK constraints
 		await prisma.connections.deleteMany({ where: { identityId } });
 		await prisma.identity.delete({ where: { id: identityId } });
 
@@ -191,7 +190,6 @@ router.get("/:id", async (req: any, res: any) => {
 		const user = await get_default_user();
 		if (!user) return res.status(500).json({ message: "Default user not found" });
 
-		// Fetch identity with connections and their accounts
 		const identity = await prisma.identity.findUnique({
 			where: { id: identityId },
 			include: {
@@ -203,7 +201,6 @@ router.get("/:id", async (req: any, res: any) => {
 
 		if (!identity) return res.status(404).json({ message: "Identity not found" });
 
-		// Verify ownership
 		if (identity.userid !== user.id)
 			return res.status(403).json({ message: "Identity ownership mismatch" });
 

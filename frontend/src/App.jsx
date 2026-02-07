@@ -14,7 +14,6 @@ function App() {
     fetchUsers();
   }, [fetchUsers]);
 
-  // Transform users to entities format
   useEffect(() => {
     if (users && users.length > 0) {
       const transformedEntities = transformUsersToEntities(users);

@@ -5,8 +5,6 @@ import { get_default_user } from "../lib/utils";
 const router = express.Router();
 
 // POST /add/:accountId
-// Accepts body: { identity: { id } }
-// Joins an existing identity to an account (identity must already exist)
 router.post("/add/:accountId", async (req: any, res: any) => {
 	const accountId = req.params.accountId;
 	const identityId = req.body?.identity?.id;
@@ -18,19 +16,16 @@ router.post("/add/:accountId", async (req: any, res: any) => {
 		const user = await get_default_user();
 		if (!user) return res.status(500).json({ message: "Default user not found" });
 
-		// Ensure account exists and belongs to the default user
 		const account = await prisma.account.findUnique({ where: { id: accountId } });
 		if (!account) return res.status(404).json({ message: "Account not found" });
 		if (account.userid !== user.id)
 			return res.status(403).json({ message: "Account ownership mismatch" });
 
-		// Ensure identity exists and belongs to the default user
 		const identity = await prisma.identity.findUnique({ where: { id: identityId } });
 		if (!identity) return res.status(404).json({ message: "Identity not found" });
 		if (identity.userid !== user.id)
 			return res.status(403).json({ message: "Identity ownership mismatch" });
 
-		// Create connection (handle duplicate)
 		try {
 			await prisma.connections.create({ data: { accountId: account.id, identityId: identity.id } });
 		} catch (err: any) {
@@ -49,8 +44,6 @@ router.post("/add/:accountId", async (req: any, res: any) => {
 });
 
 // POST /remove/:accountId
-// Accepts body: { identity: { id } }
-// Removes an existing identity from an account
 router.post("/remove/:accountId", async (req: any, res: any) => {
 	const accountId = req.params.accountId;
 	const identityId = req.body?.identity?.id;
@@ -62,13 +55,11 @@ router.post("/remove/:accountId", async (req: any, res: any) => {
 		const user = await get_default_user();
 		if (!user) return res.status(500).json({ message: "Default user not found" });
 
-		// Ensure account exists and belongs to the default user
 		const account = await prisma.account.findUnique({ where: { id: accountId } });
 		if (!account) return res.status(404).json({ message: "Account not found" });
 		if (account.userid !== user.id)
 			return res.status(403).json({ message: "Account ownership mismatch" });
 
-		// Ensure identity exists and belongs to the default user
 		const identity = await prisma.identity.findUnique({ where: { id: identityId } });
 		if (!identity) return res.status(404).json({ message: "Identity not found" });
 		if (identity.userid !== user.id)

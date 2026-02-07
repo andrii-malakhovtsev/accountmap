@@ -282,52 +282,37 @@ router.delete("/:id", async (req: any, res: any) => {
 	}
 });
 
-/**
- * Middleware: Sanitizes the entire req.body array and maps each account to the Account schema.
- * Validates required/optional fields and type-checks them.
- * Adds userid to each account.
- * If valid, attaches sanitized data to req.body and calls next().
- * If invalid, responds with 400 error.
- */
+
 async function sanitizeAccount(req: any, res: any, next: any) {
 	try {
 		const payload = req.body;
 
-		// Validate payload is an array
 		if (!Array.isArray(payload)) {
 			return res.status(400).json({ error: "Request body must be an array of accounts" });
 		}
 
-		// Get userid
 		const user = await get_default_user();
 		if (!user) {
 			return res.status(500).json({ error: "Default user not found" });
 		}
 		const userid = user.id;
-		// const userid = (await get_default_user())!.id;
 
-		// Sanitize each item in the array
 		const sanitized = payload.map((item: any, index: number) => {
-			// Validate item is an object
 			if (!item || typeof item !== "object") {
 				throw new Error(`Item at index ${index} must be an object`);
 			}
 
-			// name is REQUIRED - must be a non-empty string
 			if (typeof item.name !== "string" || item.name.trim() === "") {
 				throw new Error(
 					`Item at index ${index}: Field "name" is required and must be a non-empty string`,
 				);
 			}
 
-			// username is OPTIONAL - trim if present
 			const username = item.username ? String(item.username).trim() : undefined;
 
-			// notes is OPTIONAL - can come from "note" or "notes" field, trim if present
 			const noteValue = item.note || item.notes;
 			const notes = noteValue ? String(noteValue).trim() : undefined;
 
-			// categories is OPTIONAL - must be array of valid enum values
 			let categories: string[] = [];
 			if (item.categories) {
 				if (!Array.isArray(item.categories)) {
@@ -339,7 +324,6 @@ async function sanitizeAccount(req: any, res: any, next: any) {
 					.filter((cat: string) => validEnumValues.includes(cat));
 			}
 
-			// url field is intentionally dropped (not part of Account schema)
 
 			return {
 				name: item.name.trim(),
@@ -350,7 +334,6 @@ async function sanitizeAccount(req: any, res: any, next: any) {
 			};
 		});
 
-		// Attach sanitized data to req and proceed
 		req.sanitizedBody = sanitized;
 		next();
 	} catch (error) {

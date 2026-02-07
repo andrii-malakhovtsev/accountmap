@@ -38,7 +38,7 @@ router.get("/analyze", async (_req: any, res: any) => {
         2. Focus solely on "Single Points of Failure" (e.g., if one Gmail account is the recovery method for 10 other accounts).
         3. Identify "Circular Loops" (e.g., Gmail recovers Outlook, and Outlook recovers Gmail).
         4. Flag "SMS Risks" (e.g., High-value accounts relying on a phone number prone to SIM swapping).
-        5. Be technical, concise, and stay under 200 words.
+        5. Be technical, concise, and stay under 100 words.
     `,
 		});
 
@@ -51,7 +51,7 @@ router.get("/analyze", async (_req: any, res: any) => {
         2. Suggested structural changes.
 
         CONSTRAINTS:
-        - Limit the entire response to approximately 200 words.
+        - Limit the entire response to approximately 100 words.
         - Be concise and prioritize the most dangerous risks first.
         `;
 
