@@ -3,7 +3,7 @@ FROM node:24-alpine
 WORKDIR /app
 
 # Copy dependency files first (better caching)
-COPY package.json ./
+COPY package.json .
 
 RUN npm install
 
@@ -18,8 +18,4 @@ RUN npm run build
 
 EXPOSE 5000
 
-# CMD ["npx", "prisma", "db", "push"]
-
-# CMD ["npm", "start"]
-
-CMD sh -c "npx prisma db push && npm run start"
+CMD ["sh", "./start.sh"]
