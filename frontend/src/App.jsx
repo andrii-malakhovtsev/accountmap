@@ -7,7 +7,6 @@ import useTestStore from './store/testStore';
 
 function App() {
   const entities = useTestStore((state) => state.entities) || [];
-  
   const [currentView, setCurrentView] = useState('map');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
@@ -16,14 +15,17 @@ function App() {
   const { processedNodes, mapLinks } = useMemo(() => {
     const nodes = [];
     const links = [];
-    const seenAccountIds = new Set();
+    const seenIds = new Set();
 
     entities.forEach(conn => {
-      nodes.push(conn);
+      if (!seenIds.has(conn.id)) {
+        nodes.push(conn);
+        seenIds.add(conn.id);
+      }
       (conn.accounts || []).forEach(acc => {
-        if (!seenAccountIds.has(acc.id)) {
+        if (!seenIds.has(acc.id)) {
           nodes.push(acc);
-          seenAccountIds.add(acc.id);
+          seenIds.add(acc.id);
         }
         links.push({ source: conn.id, target: acc.id });
       });
@@ -53,19 +55,20 @@ function App() {
         onAddAccount={() => handleSelect(null, 'createAccount')}
         onAddConnection={() => handleSelect(null, 'createConnection')}
       />
-
       <main className="flex-1 relative bg-[#0a0a0a] overflow-hidden">
         {currentView === 'map' ? (
-          <MapView nodes={processedNodes} links={mapLinks} onSelectAccount={handleSelect} selectedId={selectedId} />
+          <div className="absolute inset-0">
+            <MapView 
+              nodes={processedNodes} 
+              links={mapLinks} 
+              onSelectAccount={handleSelect} 
+              selectedId={selectedId} 
+            />
+          </div>
         ) : (
-          <ListView 
-            entities={entities} 
-            onSelectAccount={handleSelect} 
-            selectedId={selectedId} 
-          />
+          <ListView entities={entities} onSelectAccount={handleSelect} selectedId={selectedId} />
         )}
       </main>
-
       <Sidebar 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)}

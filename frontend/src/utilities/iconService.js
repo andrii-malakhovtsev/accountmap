@@ -22,9 +22,13 @@ export const getIconUrl = (name) => {
   if (!name || typeof name !== 'string' || name === "Select an Account") return GENERIC_ICON;
   const clean = name.toLowerCase().trim();
   
-  if (clean === 'phone') return 'https://cdn-icons-png.flaticon.com/512/455/455705.png';
+  if (clean === 'phone') return 'https://cdn-icons-png.flaticon.com/512/724/724664.png';
   
   const slug = getSlug(name);
+  
+  if (slug === 'twilio') return `https://cdn.simpleicons.org/twilio/F22F46`; // Twilio Red
+  if (slug === 'amazonwebservices') return `https://cdn.simpleicons.org/amazonwebservices/FF9900`; // AWS Orange
+  
   return `https://cdn.simpleicons.org/${slug}`;
 };
 
@@ -36,6 +40,7 @@ export const loadImage = (name) => {
     img.onload = () => resolve(img);
     img.onerror = () => {
       const fallback = new Image();
+      fallback.crossOrigin = 'anonymous';
       fallback.src = GENERIC_ICON;
       fallback.onload = () => resolve(fallback);
     };

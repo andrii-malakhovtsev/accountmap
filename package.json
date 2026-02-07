@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "react-force-graph-3d": "^1.29.1",
+    "three-spritetext": "^1.10.0"
+  }
+}
