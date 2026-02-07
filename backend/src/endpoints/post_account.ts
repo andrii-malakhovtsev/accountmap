@@ -1,7 +1,10 @@
-import { Identity } from "../../generated/prisma/client";
-import { PostAccounts } from "../input_types";
+import { Account, Identity } from "../../generated/prisma/client";
 import { prisma } from "../lib/prisma";
 import { app, get_default_user } from "../lib/utils";
+
+export type PostAccounts = Omit<Account, "id" | "userid"> & {
+  identities: Omit<Identity, "id" | "userid">[];
+};
 
 async function get_or_create_identities(
   userid: string,
@@ -36,7 +39,7 @@ async function get_or_create_identities(
 
 app.post("/accounts", async (req, res) => {
   let body: PostAccounts = req.body;
-  console.log(body)
+  console.log(body);
   const userid = (await get_default_user())!.id;
   try {
     const identities = await get_or_create_identities(
@@ -61,7 +64,7 @@ app.post("/accounts", async (req, res) => {
     await prisma.connections.createMany({ data: connections });
   } catch (error) {
     res.status(404);
-    console.log(error)
+    console.log(error);
     res.json({ message: "Error creating account" });
     return;
   }
