@@ -83,7 +83,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
   return (
     <div className="w-full h-full relative bg-[#0a0a0a]">
       {/* View Toggle Button */}
-      <div className="absolute top-4 left-4 z-[999]">
+      <div className="absolute bottom-4 left-4 z-[999]">
         <button 
           onClick={() => setIs3D(!is3D)}
           className="bg-blue-600 hover:bg-blue-500 text-white px-5 py-2 rounded-full font-black text-[10px] uppercase border border-white/10 shadow-2xl transition-all active:scale-95"
