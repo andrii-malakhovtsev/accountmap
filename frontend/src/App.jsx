@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import Header from "../components/Header/Header";
 import Sidebar from "./../components/Sidebar/Sidebar";
 import MapView from "./pages/MapView";
@@ -10,6 +10,11 @@ function App() {
   const { users, fetchUsers } = useUserStore();
   const [entities, setEntities] = useState([]);
   const [healthStatus, setHealthStatus] = useState("waking");
+  
+  const [currentView, setCurrentView] = useState("map");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState(null);
+  const [viewMode, setViewMode] = useState("view");
 
   useEffect(() => {
     const checkRelay = async () => {
@@ -44,37 +49,46 @@ function App() {
     }
   }, [users]);
 
-  const [currentView, setCurrentView] = useState("map");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
-  const [viewMode, setViewMode] = useState("view");
-
+  // --- STABILIZED DATA TRANSFORMATION ---
+  // We use useMemo to ensure that nodes and links keep the same references
+  // unless 'entities' actually changes.
   const { processedNodes, mapLinks } = useMemo(() => {
     const nodes = [];
     const links = [];
     const seenAccountIds = new Set();
 
     entities.forEach((conn) => {
-      nodes.push(conn);
+      // Create a stable node object for the connection
+      const connectionNode = { ...conn };
+      nodes.push(connectionNode);
+
       (conn.accounts || []).forEach((acc) => {
-        if (!seenAccountIds.has(acc.id)) {
-          nodes.push(acc);
-          seenAccountIds.add(acc.id);
+        const accountId = String(acc.id);
+        if (!seenAccountIds.has(accountId)) {
+          nodes.push({ ...acc, id: accountId });
+          seenAccountIds.add(accountId);
         }
-        links.push({ source: conn.id, target: acc.id });
+        links.push({ 
+          source: String(conn.id), 
+          target: accountId 
+        });
       });
     });
+
     return { processedNodes: nodes, mapLinks: links };
   }, [entities]);
 
-  const handleSelect = (entity, mode = "view") => {
-    setSelectedId(entity?.id || null);
+  // This prevents the MapView from re-rendering every time App.jsx cycles.
+  // Fix for the "dead click" issue in 2D (ONLY PULLS UP IN PROD)
+  const handleSelect = useCallback((entity, mode = "view") => {
+    const id = entity?.id || null;
+    setSelectedId(id);
     setViewMode(mode);
     setIsSidebarOpen(true);
-  };
+  }, []);
 
   const selectedEntity = useMemo(
-    () => processedNodes.find((n) => n.id === selectedId) || null,
+    () => processedNodes.find((n) => String(n.id) === String(selectedId)) || null,
     [processedNodes, selectedId],
   );
 
