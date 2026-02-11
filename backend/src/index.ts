@@ -12,6 +12,10 @@ const allowedOrigins = [
     "http://localhost:5173",
 ].filter(Boolean);
 
+app.get('/ping', (req, res) => {
+  res.status(200).json({ status: 'alive', uptime: process.uptime() });
+});
+
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin)) {
