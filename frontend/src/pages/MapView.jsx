@@ -11,8 +11,9 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
   const [is3D, setIs3D] = useState(false);
   const fgRef = useRef();
 
-  // Batch icon loading to prevent "re-render spam" that breaks the 2D hit-map
+  // BATCH ICON LOADING: Prevents the "stutter" that breaks 2D clicks in production
   useEffect(() => {
+    let isMounted = true;
     const loadAllIcons = async () => {
       const newIcons = {};
       const loadPromises = nodes.map(async (node) => {
@@ -20,24 +21,24 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           try {
             const iconKey = node.accounts ? node.type : node.name;
             const img = await loadImage(iconKey);
-            newIcons[node.id] = img;
+            if (img) newIcons[node.id] = img;
           } catch (e) {
-            console.error(`Failed to load icon for ${node.id}`);
+            console.error(`Failed icon: ${node.id}`);
           }
         }
       });
 
       await Promise.all(loadPromises);
-      if (Object.keys(newIcons).length > 0) {
+      if (isMounted && Object.keys(newIcons).length > 0) {
         setIconCache((prev) => ({ ...prev, ...newIcons }));
       }
     };
 
     loadAllIcons();
+    return () => { isMounted = false; };
   }, [nodes]);
 
-  // Memoize graph data so the component doesn't think the data is "new" on every render
-  const data = useMemo(() => ({ nodes, links }), [nodes, links]);
+  const graphData = useMemo(() => ({ nodes, links }), [nodes, links]);
 
   useEffect(() => {
     if (fgRef.current) {
@@ -47,14 +48,13 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     }
   }, [is3D]);
 
-  // --- 3D NODE GENERATOR (UNTOUCHED) ---
+  // --- 3D NODE GENERATOR ---
   const getNodeThreeObject = useCallback((node) => {
     const isSelected = node.id === selectedId;
     const isConn = !!node.accounts;
     const img = iconCache[node.id];
     
     const group = new THREE.Group();
-
     const hitBoxSize = isConn ? 12 : 9;
     const hitBox = new THREE.Mesh(
       new THREE.SphereGeometry(hitBoxSize),
@@ -107,7 +107,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
       {is3D ? (
         <ForceGraph3D
           ref={fgRef}
-          graphData={data}
+          graphData={graphData}
           backgroundColor="#0a0a0a"
           onNodeClick={(node) => onSelectAccount(node)}
           nodeThreeObject={getNodeThreeObject}
@@ -122,21 +122,21 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
       ) : (
         <ForceGraph2D
           ref={fgRef}
-          graphData={data}
+          graphData={graphData}
           backgroundColor="#0a0a0a"
           onNodeClick={(node) => onSelectAccount(node)}
           
-          // Added a small threshold to ensure clicks register even if the 
-          // user's mouse moves slightly on a laggy production connection
-          clickDistanceThreshold={6}
-
+          // --- THE 2D ---
+          // Increase click sensitivity for ALL nodes
+          clickDistanceThreshold={8} 
+          
           nodePointerAreaPaint={(node, color, ctx) => {
-            const isConn = !!node.accounts;
-            // Make the hit area slightly larger than the visual to solve "not clicky" nodes
-            const size = (isConn ? 12 : 8) + 4;
+            // Give EVERY node a minimum hit-radius of 14, even if they look smaller.
+            // This fixes why "individual accounts" weren't clicking.
+            const hitRadius = 14; 
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+            ctx.arc(node.x, node.y, hitRadius, 0, 2 * Math.PI);
             ctx.fill();
           }}
 
