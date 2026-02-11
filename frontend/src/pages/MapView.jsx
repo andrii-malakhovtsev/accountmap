@@ -12,6 +12,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
   const fgRef = useRef();
 
   useEffect(() => {
+    let isMounted = true;
     const loadIcons = async () => {
       const updates = {};
       for (const node of nodes) {
@@ -19,24 +20,38 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           try {
             const iconKey = node.accounts ? node.type : node.name;
             const img = await loadImage(iconKey);
-            updates[node.id] = img;
-          } catch (e) { /* silent fail */ }
+            
+            // CRITICAL: Only cache if image has actual dimensions
+            // This prevents the "glTexStorage2D: dimensions must be > 0" error
+            // ONLY VISIBLE ON PROD
+            if (img && img.width > 0 && img.height > 0) {
+              updates[node.id] = img;
+            }
+          } catch (e) {
+            console.warn(`Icon failed for ${node.id}`);
+          }
         }
       }
-      if (Object.keys(updates).length > 0) {
+      if (isMounted && Object.keys(updates).length > 0) {
         setIconCache(prev => ({ ...prev, ...updates }));
       }
     };
     loadIcons();
+    return () => { isMounted = false; };
   }, [nodes]);
 
-  const graphData = useMemo(() => ({ nodes, links }), [nodes, links]);
+  const graphData = useMemo(() => ({
+    nodes: nodes.map(n => ({ ...n, id: String(n.id) })),
+    links: links.map(l => ({
+      ...l,
+      source: typeof l.source === 'object' ? l.source.id : String(l.source),
+      target: typeof l.target === 'object' ? l.target.id : String(l.target)
+    }))
+  }), [nodes, links]);
 
   useEffect(() => {
     if (fgRef.current) {
-      setTimeout(() => {
-        fgRef.current.zoomToFit(400, 100);
-      }, 150);
+      setTimeout(() => fgRef.current.zoomToFit(400, 100), 200);
     }
   }, [is3D]);
 
@@ -113,32 +128,27 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           backgroundColor="#0a0a0a"
           onNodeClick={(node) => onSelectAccount(node)}
           
-          // INCREASED THRESHOLD: Helps with production lag
           clickDistanceThreshold={10}
           
           nodePointerAreaPaint={(node, color, ctx) => {
-            if (!node) return;
-            // Force a large, static hit area for every single node
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(node.x, node.y, 16, 0, 2 * Math.PI);
+            ctx.arc(node.x, node.y, 14, 0, 2 * Math.PI);
             ctx.fill();
           }}
 
           nodeCanvasObject={(node, ctx, globalScale) => {
-            if (!node) return;
             const isSelected = node.id === selectedId;
             const isConn = !!node.accounts;
             const size = isConn ? 12 : 8;
             const img = iconCache[node.id];
+            const hasValidImg = img && img.width > 0;
 
             if (isSelected) {
               ctx.beginPath();
-              ctx.arc(node.x, node.y, size + 4, 0, 2 * Math.PI);
-              ctx.fillStyle = "#3b82f6";
-              ctx.globalAlpha = 0.3;
+              ctx.arc(node.x, node.y, size + 5, 0, 2 * Math.PI);
+              ctx.fillStyle = "rgba(59, 130, 246, 0.3)";
               ctx.fill();
-              ctx.globalAlpha = 1.0;
             }
 
             ctx.beginPath();
@@ -146,22 +156,24 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
             ctx.fillStyle = isConn ? "#1e1e1e" : "#FFFFFF";
             ctx.fill();
 
-            if (img) {
-              const iconSize = size * 0.8;
-              ctx.drawImage(img, node.x - iconSize, node.y - iconSize, iconSize * 2, iconSize * 2);
+            if (hasValidImg) {
+              try {
+                const iconSize = size * 0.8;
+                ctx.drawImage(img, node.x - iconSize, node.y - iconSize, iconSize * 2, iconSize * 2);
+              } catch (e) {
+                // If drawImage fails, we still have the circle and text
+              }
             }
 
-            // TEXT RENDERING: Force display for better debugging
-            const label = (isConn ? node.type : node.name || "Unknown").toUpperCase();
-            const fontSize = Math.max(4, 10 / globalScale); 
+            const label = (isConn ? node.type : node.name || "UNNAMED").toUpperCase();
+            const fontSize = 10 / globalScale;
             ctx.font = `600 ${fontSize}px Inter, sans-serif`;
             ctx.textAlign = "center";
-            ctx.textBaseline = "top";
             ctx.fillStyle = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
-            ctx.fillText(label, node.x, node.y + size + 2);
+            ctx.fillText(label, node.x, node.y + size + 4);
           }}
           linkWidth={1.2}
-          linkColor={() => "rgba(255, 255, 255, 0.1)"}
+          linkColor={() => "rgba(255, 255, 255, 0.08)"}
         />
       )}
     </div>
