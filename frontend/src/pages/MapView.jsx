@@ -27,20 +27,20 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
 
   useEffect(() => {
     if (fgRef.current) {
-      const timer = setTimeout(() => {
+      setTimeout(() => {
         fgRef.current.zoomToFit(400, 100);
-      }, 150);
-      return () => clearTimeout(timer);
+      }, 100);
     }
   }, [is3D]);
 
-  // --- 3D NODE GENERATOR ---
+  // --- 3D NODE GENERATOR  ---
   const getNodeThreeObject = useCallback((node) => {
     const isSelected = node.id === selectedId;
     const isConn = !!node.accounts;
     const img = iconCache[node.id];
     
     const group = new THREE.Group();
+
     const hitBoxSize = isConn ? 12 : 9;
     const hitBox = new THREE.Mesh(
       new THREE.SphereGeometry(hitBoxSize),
@@ -80,48 +80,14 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
   }, [selectedId, iconCache]);
 
   // --- 2D RENDERING ---
-  
   const paintPointerArea = useCallback((node, color, ctx) => {
     const isConn = !!node.accounts;
-    const size = (isConn ? 12 : 8) + 2; 
+    const size = (isConn ? 12 : 8) + 4; // Extra padding for easier clicking
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
     ctx.fill();
   }, []);
-
-  const paintCanvasObject = useCallback((node, ctx, globalScale) => {
-    const isSelected = node.id === selectedId;
-    const isConn = !!node.accounts;
-    const size = isConn ? 12 : 8;
-    const img = iconCache[node.id];
-
-    if (isSelected) {
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, size + 5, 0, 2 * Math.PI);
-      ctx.fillStyle = "rgba(59, 130, 246, 0.25)";
-      ctx.fill();
-    }
-
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-    ctx.fillStyle = isConn ? "#1e1e1e" : "#FFFFFF";
-    ctx.fill();
-
-    if (img) {
-      const iconSize = size * 0.7;
-      ctx.drawImage(img, node.x - iconSize, node.y - iconSize, iconSize * 2, iconSize * 2);
-    }
-
-    if (globalScale > 1.2 || isSelected) {
-      const label = isConn ? node.type : node.name;
-      const fontSize = (isConn ? 9 : 7) / globalScale;
-      ctx.font = `600 ${fontSize}px Inter, Sans-Serif`;
-      ctx.textAlign = "center";
-      ctx.fillStyle = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
-      ctx.fillText(label.toUpperCase(), node.x, node.y + size + 4);
-    }
-  }, [selectedId, iconCache]);
 
   return (
     <div className="w-full h-full relative bg-[#0a0a0a]">
@@ -147,6 +113,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           linkDirectionalParticles={2}
           linkDirectionalParticleWidth={1.5}
           linkDirectionalParticleSpeed={0.006}
+          hoverPrecision={2} 
         />
       ) : (
         <ForceGraph2D
@@ -154,11 +121,48 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           graphData={{ nodes, links }}
           backgroundColor="#0a0a0a"
           onNodeClick={(node) => onSelectAccount(node)}
+          
+          // Added these props to fix the "not clicky" issue in 2D in prod
+          clickDistanceThreshold={4} 
+          d3AlphaDecay={0.05}
+          velocityDecay={0.3}
+          
           nodePointerAreaPaint={paintPointerArea}
-          nodeCanvasObject={paintCanvasObject}
+
+          nodeCanvasObject={(node, ctx, globalScale) => {
+            const isSelected = node.id === selectedId;
+            const isConn = !!node.accounts;
+            const size = isConn ? 12 : 8;
+            const img = iconCache[node.id];
+
+            if (isSelected) {
+              ctx.beginPath();
+              ctx.arc(node.x, node.y, size + 5, 0, 2 * Math.PI);
+              ctx.fillStyle = "rgba(59, 130, 246, 0.25)";
+              ctx.fill();
+            }
+
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+            ctx.fillStyle = isConn ? "#1e1e1e" : "#FFFFFF";
+            ctx.fill();
+
+            if (img) {
+              const iconSize = size * 0.7;
+              ctx.drawImage(img, node.x - iconSize, node.y - iconSize, iconSize * 2, iconSize * 2);
+            }
+
+            if (globalScale > 1.2 || isSelected) {
+              const label = isConn ? node.type : node.name;
+              const fontSize = (isConn ? 9 : 7) / globalScale;
+              ctx.font = `600 ${fontSize}px Inter, Sans-Serif`;
+              ctx.textAlign = "center";
+              ctx.fillStyle = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
+              ctx.fillText(label.toUpperCase(), node.x, node.y + size + 4);
+            }
+          }}
           linkWidth={1.5}
           linkColor={() => "rgba(255, 255, 255, 0.08)"}
-          cooldownTicks={100}
         />
       )}
     </div>
