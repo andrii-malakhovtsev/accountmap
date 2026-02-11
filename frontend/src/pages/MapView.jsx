@@ -11,31 +11,23 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
   const [is3D, setIs3D] = useState(false);
   const fgRef = useRef();
 
-  // BATCH ICON LOADING: Prevents the "stutter" that breaks 2D clicks in production
   useEffect(() => {
-    let isMounted = true;
-    const loadAllIcons = async () => {
-      const newIcons = {};
-      const loadPromises = nodes.map(async (node) => {
+    const loadIcons = async () => {
+      const updates = {};
+      for (const node of nodes) {
         if (!iconCache[node.id]) {
           try {
             const iconKey = node.accounts ? node.type : node.name;
             const img = await loadImage(iconKey);
-            if (img) newIcons[node.id] = img;
-          } catch (e) {
-            console.error(`Failed icon: ${node.id}`);
-          }
+            updates[node.id] = img;
+          } catch (e) { /* silent fail */ }
         }
-      });
-
-      await Promise.all(loadPromises);
-      if (isMounted && Object.keys(newIcons).length > 0) {
-        setIconCache((prev) => ({ ...prev, ...newIcons }));
+      }
+      if (Object.keys(updates).length > 0) {
+        setIconCache(prev => ({ ...prev, ...updates }));
       }
     };
-
-    loadAllIcons();
-    return () => { isMounted = false; };
+    loadIcons();
   }, [nodes]);
 
   const graphData = useMemo(() => ({ nodes, links }), [nodes, links]);
@@ -44,7 +36,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     if (fgRef.current) {
       setTimeout(() => {
         fgRef.current.zoomToFit(400, 100);
-      }, 100);
+      }, 150);
     }
   }, [is3D]);
 
@@ -53,7 +45,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     const isSelected = node.id === selectedId;
     const isConn = !!node.accounts;
     const img = iconCache[node.id];
-    
     const group = new THREE.Group();
     const hitBoxSize = isConn ? 12 : 9;
     const hitBox = new THREE.Mesh(
@@ -61,7 +52,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
       new THREE.MeshBasicMaterial({ visible: false, transparent: true, opacity: 0 })
     );
     group.add(hitBox);
-
     const sphere = new THREE.Mesh(
       new THREE.SphereGeometry(isConn ? 8 : 5),
       new THREE.MeshLambertMaterial({ 
@@ -71,7 +61,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
       })
     );
     group.add(sphere);
-
     if (img) {
       const texture = new THREE.Texture(img);
       texture.needsUpdate = true;
@@ -80,7 +69,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
       sprite.scale.set(isConn ? 10 : 7, isConn ? 10 : 7, 1);
       group.add(sprite);
     }
-
     const labelText = (isConn ? node.type : node.name).toUpperCase();
     const label = new SpriteText(labelText);
     label.color = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
@@ -89,7 +77,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     label.position.y = isConn ? -14 : -10;
     label.raycast = () => null; 
     group.add(label);
-
     return group;
   }, [selectedId, iconCache]);
 
@@ -126,21 +113,20 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           backgroundColor="#0a0a0a"
           onNodeClick={(node) => onSelectAccount(node)}
           
-          // --- THE 2D ---
-          // Increase click sensitivity for ALL nodes
-          clickDistanceThreshold={8} 
+          // INCREASED THRESHOLD: Helps with production lag
+          clickDistanceThreshold={10}
           
           nodePointerAreaPaint={(node, color, ctx) => {
-            // Give EVERY node a minimum hit-radius of 14, even if they look smaller.
-            // This fixes why "individual accounts" weren't clicking.
-            const hitRadius = 14; 
+            if (!node) return;
+            // Force a large, static hit area for every single node
             ctx.fillStyle = color;
             ctx.beginPath();
-            ctx.arc(node.x, node.y, hitRadius, 0, 2 * Math.PI);
+            ctx.arc(node.x, node.y, 16, 0, 2 * Math.PI);
             ctx.fill();
           }}
 
           nodeCanvasObject={(node, ctx, globalScale) => {
+            if (!node) return;
             const isSelected = node.id === selectedId;
             const isConn = !!node.accounts;
             const size = isConn ? 12 : 8;
@@ -148,9 +134,11 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
 
             if (isSelected) {
               ctx.beginPath();
-              ctx.arc(node.x, node.y, size + 5, 0, 2 * Math.PI);
-              ctx.fillStyle = "rgba(59, 130, 246, 0.25)";
+              ctx.arc(node.x, node.y, size + 4, 0, 2 * Math.PI);
+              ctx.fillStyle = "#3b82f6";
+              ctx.globalAlpha = 0.3;
               ctx.fill();
+              ctx.globalAlpha = 1.0;
             }
 
             ctx.beginPath();
@@ -159,21 +147,21 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
             ctx.fill();
 
             if (img) {
-              const iconSize = size * 0.7;
+              const iconSize = size * 0.8;
               ctx.drawImage(img, node.x - iconSize, node.y - iconSize, iconSize * 2, iconSize * 2);
             }
 
-            if (globalScale > 1.2 || isSelected) {
-              const label = isConn ? node.type : node.name;
-              const fontSize = (isConn ? 9 : 7) / globalScale;
-              ctx.font = `600 ${fontSize}px Inter, Sans-Serif`;
-              ctx.textAlign = "center";
-              ctx.fillStyle = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
-              ctx.fillText(label.toUpperCase(), node.x, node.y + size + 4);
-            }
+            // TEXT RENDERING: Force display for better debugging
+            const label = (isConn ? node.type : node.name || "Unknown").toUpperCase();
+            const fontSize = Math.max(4, 10 / globalScale); 
+            ctx.font = `600 ${fontSize}px Inter, sans-serif`;
+            ctx.textAlign = "center";
+            ctx.textBaseline = "top";
+            ctx.fillStyle = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
+            ctx.fillText(label, node.x, node.y + size + 2);
           }}
-          linkWidth={1.5}
-          linkColor={() => "rgba(255, 255, 255, 0.08)"}
+          linkWidth={1.2}
+          linkColor={() => "rgba(255, 255, 255, 0.1)"}
         />
       )}
     </div>
