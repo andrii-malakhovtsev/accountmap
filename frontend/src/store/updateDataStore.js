@@ -11,7 +11,7 @@ const updateDataStore = create((set) => ({
     console.log("inside bulk accounts", accounts);
     set({ loading: true, error: null });
     try {
-      const res = await fetch("http://localhost:8081/api/accounts/bulk", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/accounts/bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(accounts),
