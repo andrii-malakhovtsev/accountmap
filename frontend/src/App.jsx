@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import Header from "./../components/Header";
+import Header from "../components/Header/Header";
 import Sidebar from "./../components/Sidebar/Sidebar";
 import MapView from "./pages/MapView";
 import ListView from "./pages/ListView";
