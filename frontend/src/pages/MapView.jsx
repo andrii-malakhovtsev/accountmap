@@ -1,5 +1,5 @@
 import "./../utilities/webgpuShim";
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import ForceGraph3D from "react-force-graph-3d";
 import * as THREE from "three";
@@ -27,7 +27,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
 
   useEffect(() => {
     if (fgRef.current) {
-      // Small delay to ensure the container is sized correctly before fitting
       const timer = setTimeout(() => {
         fgRef.current.zoomToFit(400, 100);
       }, 150);
@@ -42,7 +41,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     const img = iconCache[node.id];
     
     const group = new THREE.Group();
-
     const hitBoxSize = isConn ? 12 : 9;
     const hitBox = new THREE.Mesh(
       new THREE.SphereGeometry(hitBoxSize),
@@ -81,9 +79,8 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     return group;
   }, [selectedId, iconCache]);
 
-  // --- 2D RENDERING OPTIMIZATIONS ---
+  // --- 2D RENDERING ---
   
-  // Memoizing the hit area paint function ensures the click-test canvas stays consistent
   const paintPointerArea = useCallback((node, color, ctx) => {
     const isConn = !!node.accounts;
     const size = (isConn ? 12 : 8) + 2; 
@@ -142,7 +139,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           ref={fgRef}
           graphData={{ nodes, links }}
           backgroundColor="#0a0a0a"
-          onNodeClick={onSelectAccount}
+          onNodeClick={(node) => onSelectAccount(node)}
           nodeThreeObject={getNodeThreeObject}
           nodeThreeObjectExtend={false}
           linkWidth={1.5}
@@ -156,13 +153,11 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           ref={fgRef}
           graphData={{ nodes, links }}
           backgroundColor="#0a0a0a"
-          onNodeClick={onSelectAccount}
+          onNodeClick={(node) => onSelectAccount(node)}
           nodePointerAreaPaint={paintPointerArea}
           nodeCanvasObject={paintCanvasObject}
-          nodeCanvasObjectMode={() => 'replace'}
           linkWidth={1.5}
           linkColor={() => "rgba(255, 255, 255, 0.08)"}
-          // Improves performance in production builds
           cooldownTicks={100}
         />
       )}
