@@ -8,8 +8,9 @@ import identitiesRoutes from "./identity.route";
 const router = express.Router();
 
 router.use("/accounts", accountsRoutes);
-router.use("/ai", aiRoutes);
+router.use("/", aiRoutes); 
 router.use("/connections", connectionsRoutes);
 router.use("/enums", enumsRoutes);
 router.use("/identities", identitiesRoutes);
+
 export default router;
