@@ -217,7 +217,11 @@ const Sidebar = ({
 
   return (
     <aside
-      className={`absolute right-0 top-20 bottom-0 w-80 bg-[#0f0f0f]/95 backdrop-blur-xl border-l border-white/10 flex flex-col z-50 transition-transform duration-300 ${isOpen ? "translate-x-0" : "translate-x-full"}`}
+      className={`absolute right-0 top-20 bottom-0 w-80 bg-[#0f0f0f]/95 backdrop-blur-xl border-l border-white/10 flex flex-col z-[1000] transition-all duration-300 
+        ${isOpen 
+          ? "translate-x-0 opacity-100 visible pointer-events-auto" 
+          : "translate-x-full opacity-0 invisible pointer-events-none"
+        }`}
     >
       <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
         <div className="flex flex-col items-center mb-8 relative">
