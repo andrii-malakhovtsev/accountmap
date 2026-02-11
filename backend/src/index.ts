@@ -8,6 +8,7 @@ const PORT = Number(process.env.PORT) || 10000;
 
 const allowedOrigins = [
     process.env.FRONTEND_URL,
+	process.env.ADDITIONAL_ORIGIN,
     "http://localhost:5173",
 ].filter(Boolean);
 
