@@ -1,5 +1,5 @@
 import express from "express";
-import { Account, Identity } from "../../generated/prisma/client";
+import { Account, Identity } from '@prisma/client';
 import { prisma } from "../lib/prisma";
 import { get_default_user } from "../lib/utils";
 
