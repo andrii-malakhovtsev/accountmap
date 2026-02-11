@@ -16,13 +16,6 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000, 
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes("node_modules")) {
-            if (id.includes("three")) return "vendor-three";
-            if (id.includes("react-force-graph")) return "vendor-graph";
-            return "vendor";
-          }
-        },
       },
     },
   },
