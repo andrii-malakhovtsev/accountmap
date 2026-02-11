@@ -2,7 +2,7 @@
 FROM node:24-slim
 
 # Install the engine dependencies Prisma needs
-RUN apt-get update -y && apt-get install -y openssl
+RUN apt-get update -y && apt-get install -y openssl libssl-dev ca-certificates
 
 WORKDIR /app
 
