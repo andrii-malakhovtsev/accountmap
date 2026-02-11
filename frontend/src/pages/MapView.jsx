@@ -11,7 +11,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
   const [is3D, setIs3D] = useState(false);
   const fgRef = useRef();
 
-  // Load icons into cache
   useEffect(() => {
     nodes.forEach(async (node) => {
       if (!iconCache[node.id]) {
@@ -26,11 +25,9 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     });
   }, [nodes, iconCache]);
 
-  // Handle auto-zoom when switching modes
   useEffect(() => {
     if (fgRef.current) {
       setTimeout(() => {
-        // Works for both 2D and 3D refs
         fgRef.current.zoomToFit(400, 100);
       }, 100);
     }
@@ -44,7 +41,15 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     
     const group = new THREE.Group();
 
-    // 1. Base Sphere
+    // 3D Hitbox
+    const hitBoxSize = isConn ? 12 : 9;
+    const hitBox = new THREE.Mesh(
+      new THREE.SphereGeometry(hitBoxSize),
+      new THREE.MeshBasicMaterial({ visible: false, transparent: true, opacity: 0 })
+    );
+    group.add(hitBox);
+
+    // Visual Sphere
     const sphere = new THREE.Mesh(
       new THREE.SphereGeometry(isConn ? 8 : 5),
       new THREE.MeshLambertMaterial({ 
@@ -55,27 +60,22 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     );
     group.add(sphere);
 
-    // 2. Icon Sprite
     if (img) {
       const texture = new THREE.Texture(img);
       texture.needsUpdate = true;
-      const spriteMaterial = new THREE.SpriteMaterial({ 
-        map: texture,
-        depthTest: false,
-        transparent: true
-      });
+      const spriteMaterial = new THREE.SpriteMaterial({ map: texture, depthTest: false, transparent: true });
       const sprite = new THREE.Sprite(spriteMaterial);
       sprite.scale.set(isConn ? 10 : 7, isConn ? 10 : 7, 1);
       group.add(sprite);
     }
 
-    // 3. Label
     const labelText = (isConn ? node.type : node.name).toUpperCase();
     const label = new SpriteText(labelText);
     label.color = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
     label.textHeight = isConn ? 4 : 3;
     label.fontWeight = "600";
     label.position.y = isConn ? -14 : -10;
+    label.raycast = () => null; 
     group.add(label);
 
     return group;
@@ -83,7 +83,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
 
   return (
     <div className="w-full h-full relative bg-[#0a0a0a]">
-      {/* View Toggle Button */}
       <div className="absolute bottom-4 left-4 z-[999]">
         <button 
           onClick={() => setIs3D(!is3D)}
@@ -106,6 +105,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           linkDirectionalParticles={2}
           linkDirectionalParticleWidth={1.5}
           linkDirectionalParticleSpeed={0.006}
+          hoverPrecision={2} 
         />
       ) : (
         <ForceGraph2D
@@ -113,13 +113,22 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           graphData={{ nodes, links }}
           backgroundColor="#0a0a0a"
           onNodeClick={(node) => onSelectAccount(node)}
+          
+          nodePointerAreaPaint={(node, color, ctx) => {
+            const isConn = !!node.accounts;
+            const size = isConn ? 12 : 8;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+            ctx.fill();
+          }}
+
           nodeCanvasObject={(node, ctx, globalScale) => {
             const isSelected = node.id === selectedId;
             const isConn = !!node.accounts;
             const size = isConn ? 12 : 8;
             const img = iconCache[node.id];
 
-            // Selection Glow
             if (isSelected) {
               ctx.beginPath();
               ctx.arc(node.x, node.y, size + 5, 0, 2 * Math.PI);
@@ -127,35 +136,22 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
               ctx.fill();
             }
 
-            // Node Circle
             ctx.beginPath();
             ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
             ctx.fillStyle = isConn ? "#1e1e1e" : "#FFFFFF";
             ctx.fill();
 
-            // Icon Drawing
             if (img) {
               const iconSize = size * 0.7;
-              ctx.drawImage(
-                img,
-                node.x - iconSize,
-                node.y - iconSize,
-                iconSize * 2,
-                iconSize * 2
-              );
+              ctx.drawImage(img, node.x - iconSize, node.y - iconSize, iconSize * 2, iconSize * 2);
             }
 
-            // Labels (conditional on zoom level or selection)
             if (globalScale > 1.2 || isSelected) {
               const label = isConn ? node.type : node.name;
               const fontSize = (isConn ? 9 : 7) / globalScale;
               ctx.font = `600 ${fontSize}px Inter, Sans-Serif`;
               ctx.textAlign = "center";
-              ctx.fillStyle = isSelected
-                ? "#3b82f6"
-                : isConn
-                ? "#60a5fa"
-                : "#9ca3af";
+              ctx.fillStyle = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
               ctx.fillText(label.toUpperCase(), node.x, node.y + size + 4);
             }
           }}
