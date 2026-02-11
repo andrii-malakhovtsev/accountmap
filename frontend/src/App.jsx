@@ -9,6 +9,29 @@ import { transformUsersToEntities } from "./utils/utils";
 function App() {
   const { users, fetchUsers } = useUserStore();
   const [entities, setEntities] = useState([]);
+  const [healthStatus, setHealthStatus] = useState("waking");
+
+  useEffect(() => {
+    const checkRelay = async () => {
+      try {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), 5000);
+        
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/ping`, { 
+          signal: controller.signal 
+        });
+        
+        clearTimeout(id);
+        if (response.ok) setHealthStatus("online");
+      } catch (err) {
+        setHealthStatus("waking");
+      }
+    };
+
+    checkRelay();
+    const interval = setInterval(checkRelay, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     fetchUsers();
@@ -18,12 +41,8 @@ function App() {
     if (users && users.length > 0) {
       const transformedEntities = transformUsersToEntities(users);
       setEntities(transformedEntities);
-      console.log("Transformed entities:", transformedEntities);
     }
   }, [users]);
-
-  console.log("users", users);
-  console.log("entities", entities);
 
   const [currentView, setCurrentView] = useState("map");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -69,9 +88,28 @@ function App() {
         setIsSidebarOpen={setIsSidebarOpen}
         onAddAccount={() => handleSelect(null, "createAccount")}
         onAddConnection={() => handleSelect(null, "createConnection")}
+        healthStatus={healthStatus} 
       />
 
       <main className="flex-1 relative bg-[#0a0a0a] overflow-hidden">
+        {healthStatus !== "online" && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center bg-[#0a0a0a]/40 backdrop-blur-[2px] pointer-events-none">
+            <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
+              <div className="flex items-center gap-3 px-5 py-2.5 bg-black/80 border border-white/10 rounded-full shadow-2xl">
+                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
+                  Backend wake up initiation...
+                </span>
+              </div>
+              <p className="text-[9px] text-gray-500 uppercase tracking-widest font-medium max-w-[200px] text-center leading-relaxed">
+                Relay is waking up on free tier infrastructure. 
+                <br />
+                <span className="text-gray-600 mt-1 block italic">(takes ~50 seconds)</span>
+              </p>
+            </div>
+          </div>
+        )}
+
         {currentView === "map" ? (
           <MapView
             nodes={processedNodes}
