@@ -1,5 +1,5 @@
 import "./../utilities/webgpuShim";
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import ForceGraph2D from "react-force-graph-2d";
 import ForceGraph3D from "react-force-graph-3d";
 import * as THREE from "three";
@@ -11,19 +11,33 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
   const [is3D, setIs3D] = useState(false);
   const fgRef = useRef();
 
+  // Batch icon loading to prevent "re-render spam" that breaks the 2D hit-map
   useEffect(() => {
-    nodes.forEach(async (node) => {
-      if (!iconCache[node.id]) {
-        try {
-          const iconKey = node.accounts ? node.type : node.name;
-          const img = await loadImage(iconKey);
-          setIconCache((prev) => ({ ...prev, [node.id]: img }));
-        } catch (e) {
-          console.error(`Failed to load icon for ${node.id}`);
+    const loadAllIcons = async () => {
+      const newIcons = {};
+      const loadPromises = nodes.map(async (node) => {
+        if (!iconCache[node.id]) {
+          try {
+            const iconKey = node.accounts ? node.type : node.name;
+            const img = await loadImage(iconKey);
+            newIcons[node.id] = img;
+          } catch (e) {
+            console.error(`Failed to load icon for ${node.id}`);
+          }
         }
+      });
+
+      await Promise.all(loadPromises);
+      if (Object.keys(newIcons).length > 0) {
+        setIconCache((prev) => ({ ...prev, ...newIcons }));
       }
-    });
-  }, [nodes, iconCache]);
+    };
+
+    loadAllIcons();
+  }, [nodes]);
+
+  // Memoize graph data so the component doesn't think the data is "new" on every render
+  const data = useMemo(() => ({ nodes, links }), [nodes, links]);
 
   useEffect(() => {
     if (fgRef.current) {
@@ -33,7 +47,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     }
   }, [is3D]);
 
-  // --- 3D NODE GENERATOR  ---
+  // --- 3D NODE GENERATOR (UNTOUCHED) ---
   const getNodeThreeObject = useCallback((node) => {
     const isSelected = node.id === selectedId;
     const isConn = !!node.accounts;
@@ -79,16 +93,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
     return group;
   }, [selectedId, iconCache]);
 
-  // --- 2D RENDERING ---
-  const paintPointerArea = useCallback((node, color, ctx) => {
-    const isConn = !!node.accounts;
-    const size = (isConn ? 12 : 8) + 4; // Extra padding for easier clicking
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
-    ctx.fill();
-  }, []);
-
   return (
     <div className="w-full h-full relative bg-[#0a0a0a]">
       <div className="absolute bottom-4 left-4 z-[999]">
@@ -103,7 +107,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
       {is3D ? (
         <ForceGraph3D
           ref={fgRef}
-          graphData={{ nodes, links }}
+          graphData={data}
           backgroundColor="#0a0a0a"
           onNodeClick={(node) => onSelectAccount(node)}
           nodeThreeObject={getNodeThreeObject}
@@ -118,16 +122,23 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
       ) : (
         <ForceGraph2D
           ref={fgRef}
-          graphData={{ nodes, links }}
+          graphData={data}
           backgroundColor="#0a0a0a"
           onNodeClick={(node) => onSelectAccount(node)}
           
-          // Added these props to fix the "not clicky" issue in 2D in prod
-          clickDistanceThreshold={4} 
-          d3AlphaDecay={0.05}
-          velocityDecay={0.3}
-          
-          nodePointerAreaPaint={paintPointerArea}
+          // Added a small threshold to ensure clicks register even if the 
+          // user's mouse moves slightly on a laggy production connection
+          clickDistanceThreshold={6}
+
+          nodePointerAreaPaint={(node, color, ctx) => {
+            const isConn = !!node.accounts;
+            // Make the hit area slightly larger than the visual to solve "not clicky" nodes
+            const size = (isConn ? 12 : 8) + 4;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, size, 0, 2 * Math.PI);
+            ctx.fill();
+          }}
 
           nodeCanvasObject={(node, ctx, globalScale) => {
             const isSelected = node.id === selectedId;
