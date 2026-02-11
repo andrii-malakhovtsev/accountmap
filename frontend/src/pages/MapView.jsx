@@ -21,9 +21,6 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
             const iconKey = node.accounts ? node.type : node.name;
             const img = await loadImage(iconKey);
             
-            // CRITICAL: Only cache if image has actual dimensions
-            // This prevents the "glTexStorage2D: dimensions must be > 0" error
-            // ONLY VISIBLE ON PROD
             if (img && img.width > 0 && img.height > 0) {
               updates[node.id] = img;
             }
@@ -57,7 +54,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
 
   // --- 3D NODE GENERATOR ---
   const getNodeThreeObject = useCallback((node) => {
-    const isSelected = node.id === selectedId;
+    const isSelected = String(node.id) === String(selectedId);
     const isConn = !!node.accounts;
     const img = iconCache[node.id];
     const group = new THREE.Group();
@@ -138,7 +135,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
           }}
 
           nodeCanvasObject={(node, ctx, globalScale) => {
-            const isSelected = node.id === selectedId;
+            const isSelected = String(node.id) === String(selectedId);
             const isConn = !!node.accounts;
             const size = isConn ? 12 : 8;
             const img = iconCache[node.id];
@@ -146,7 +143,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
 
             if (isSelected) {
               ctx.beginPath();
-              ctx.arc(node.x, node.y, size + 5, 0, 2 * Math.PI);
+              ctx.arc(node.x, node.y, size + 4, 0, 2 * Math.PI);
               ctx.fillStyle = "rgba(59, 130, 246, 0.3)";
               ctx.fill();
             }
@@ -158,19 +155,19 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId }) => {
 
             if (hasValidImg) {
               try {
-                const iconSize = size * 0.8;
+                const iconSize = size * 0.6;
                 ctx.drawImage(img, node.x - iconSize, node.y - iconSize, iconSize * 2, iconSize * 2);
               } catch (e) {
-                // If drawImage fails, we still have the circle and text
+                // Fallback to plain circle if draw fails
               }
             }
 
-            const label = (isConn ? node.type : node.name || "UNNAMED").toUpperCase();
+            const label = (isConn ? node.type : node.name || "").toUpperCase();
             const fontSize = 10 / globalScale;
             ctx.font = `600 ${fontSize}px Inter, sans-serif`;
             ctx.textAlign = "center";
             ctx.fillStyle = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
-            ctx.fillText(label, node.x, node.y + size + 4);
+            ctx.fillText(label, node.x, node.y + size + 5);
           }}
           linkWidth={1.2}
           linkColor={() => "rgba(255, 255, 255, 0.08)"}
