@@ -98,7 +98,7 @@ function App() {
               <div className="flex items-center gap-3 px-5 py-2.5 bg-black/80 border border-white/10 rounded-full shadow-2xl">
                 <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
-                  Backend wake up initiation...
+                  Waking up the back-end just for you, it takes about 50 seconds...
                 </span>
               </div>
               <p className="text-[9px] text-gray-500 uppercase tracking-widest font-medium max-w-[200px] text-center leading-relaxed">

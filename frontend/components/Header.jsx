@@ -121,11 +121,11 @@ const Header = ({
               </p>
               <p className="text-gray-400 font-medium">
                 {healthStatus === "online" 
-                  ? "The zero-knowledge relay is active. Handshakes will be near-instant."
-                  : "The privacy engine is spinning up on a secure instance. This usually takes ~50s for cold starts."
+                  ? "Ready to use"
+                  : "Waiting for back-end to wake up"
                 }
                 <span className="text-white block mt-1">
-                  Your local data is currently safe and accessible regardless of relay status.
+                  Everyone shares the same map
                 </span>
               </p>
             </div>
