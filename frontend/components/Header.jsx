@@ -57,7 +57,7 @@ const Header = ({
     setAnalysisResult(null); // Clear previous result
     
     try {
-      const response = await fetch("http://localhost:8081/api/ai/analyze", {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/ai,analyze`, {
         method: 'GET',
       });
       

@@ -10,7 +10,7 @@ const useUserStore = create((set) => ({
 
     try {
       console.log("inside fetchUsers");
-      const res = await fetch("http://localhost:8081/api/identities/map");
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/identities/map`);
       const data = await res.json();
       set({ users: data, loading: false });
     } catch (err) {

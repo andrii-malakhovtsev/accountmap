@@ -11,7 +11,7 @@ const useSidebarStore = create((set) => ({
 		try {
 			// Remove type from account data
 			const { type, value, ...dataWithoutType } = accountData;
-			const res = await fetch("http://localhost:8081/api/accounts/add", {
+			const res = await fetch(`${import.meta.env.VITE_API_URL}/api/accounts/add`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(dataWithoutType),
@@ -34,7 +34,7 @@ const useSidebarStore = create((set) => ({
 		try {
 			const { name, username, ...dataWithoutType } = connectionData;
 			// Keep type for connection
-			const res = await fetch("http://localhost:8081/api/identities/add", {
+			const res = await fetch(`${import.meta.env.VITE_API_URL}/api/identities/add`, {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(connectionData),
@@ -60,7 +60,7 @@ const useSidebarStore = create((set) => ({
 		set({ loading: true, error: null, success: false });
 		try {
 			const res = await fetch(
-				`http://localhost:8081/api/connections/add/${accountId}`,
+				`${import.meta.env.VITE_API_URL}/api/connections/add/${accountId}`,
 				{
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
@@ -83,7 +83,7 @@ const useSidebarStore = create((set) => ({
 	deleteAccount: async (accountId) => {
 		set({ loading: true, error: null, success: false });
 		try {
-			const res = await fetch(`http://localhost:8081/api/accounts/${accountId}`, {
+			const res = await fetch(`${import.meta.env.VITE_API_URL}/api/accounts/${accountId}`, {
 				method: "DELETE",
 			});
 
@@ -102,7 +102,7 @@ const useSidebarStore = create((set) => ({
 	deleteIdentity: async (identityId) => {
 		set({ loading: true, error: null, success: false });
 		try {
-			const res = await fetch(`http://localhost:8081/api/identities/${identityId}`, {
+			const res = await fetch(`${import.meta.env.VITE_API_URL}/api/identities/${identityId}`, {
 				method: "DELETE",
 			});
 
