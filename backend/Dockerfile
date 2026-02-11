@@ -1,21 +1,27 @@
-FROM node:24-alpine
+# Use a slightly more robust image for Prisma
+FROM node:24-slim
+
+# Install the engine dependencies Prisma needs
+RUN apt-get update -y && apt-get install -y openssl
 
 WORKDIR /app
 
-# Copy dependency files first (better caching)
-COPY package.json .
+# 1. Copy package files
+COPY package.json package-lock.json* ./
 
+# 2. Copy prisma folder first
+COPY prisma ./prisma/
+
+# 3. Install dependencies (Prisma client is generated here)
 RUN npm install
 
-# Copy the rest of the source
+# 4. Copy the rest of the code
 COPY . .
 
-# Generate Prisma client
-RUN npx prisma generate
-
-# Build the app
+# 5. Build the app (TS to JS)
 RUN npm run build
 
-EXPOSE 5000
+# RENDER REQUIRES PORT 10000
+EXPOSE 10000
 
-CMD sh -c "npx prisma db push && npm run start"
+CMD npx prisma db push && npm run start

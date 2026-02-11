@@ -77,7 +77,10 @@ const Header = ({
     <header className="h-20 min-h-[80px] flex-shrink-0 bg-[#0f0f0f]/80 backdrop-blur-xl border-b border-white/10 flex items-center justify-between px-8 z-[60] relative">
       <div className="flex items-center gap-8">
         <h2 className="font-black text-2xl tracking-tighter text-blue-500 uppercase">
-          AccountMap
+          AccountMap 
+          <span className="text-xs text-red-600 uppercase ml-1 font-bold">
+            demo
+          </span> ⚛︎
         </h2>
 
         {hasData && (

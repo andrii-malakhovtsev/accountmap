@@ -1,5 +1,5 @@
 import express from "express";
-import { Categories, IdentityType } from "../../generated/prisma/enums";
+import { Categories, IdentityType } from '@prisma/client';
 
 const router = express.Router();
 
