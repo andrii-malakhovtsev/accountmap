@@ -4,10 +4,21 @@ import { prisma } from "./lib/prisma";
 import { app, get_default_user } from "./lib/utils";
 import routes from "./routes/index.route";
 
-const PORT: number = Number(process.env.PORT) || 10000; // Render default is 10000
+const PORT = Number(process.env.PORT) || 10000;
+
+const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    "http://localhost:5173",
+].filter(Boolean);
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173", 
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     credentials: true
 }));
 
@@ -24,9 +35,9 @@ async function load_default_user() {
     if (user) return;
     await prisma.user.create({
         data: {
-            email: "default@example.com",
-            password: "default", 
-            username: "default",
+            email: process.env.DEFAULT_USER_EMAIL || "default@example.com",
+            password: process.env.DEFAULT_USER_PASSWORD || "default",
+            username: process.env.DEFAULT_USER_NAME || "default",
         },
     });
 }
@@ -36,7 +47,7 @@ load_default_user().then(() => {
         console.log(`Server running on port ${PORT}`);
     });
 });
--
+
 process.on("SIGTERM", () => {
     console.log("SIGTERM received. Cleaning up...");
     process.exit(0);
