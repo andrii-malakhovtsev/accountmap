@@ -34,24 +34,28 @@ const Header = ({
       <div className="h-20 min-h-[80px] flex items-center px-6 md:px-8 relative justify-between">
         
         {/* Brand / Logo Section */}
-        {/* Removed absolute positioning on mobile to prevent overlap with the Return button */}
-        <div className="flex items-center gap-3 whitespace-nowrap z-10">
-          <Link to="/" className="flex items-center gap-3 group">
-            <h2 className="font-black text-xl md:text-2xl tracking-tighter text-blue-500 uppercase flex items-center transition-colors group-hover:text-blue-400">
+        <div className="flex items-center whitespace-nowrap z-10">
+          <Link to="/" className="flex flex-col group">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[8px] md:text-[9px] text-red-600 uppercase font-black tracking-[0.2em] leading-none opacity-80">
+                Demo
+              </span>
+              <div className={`w-1.5 h-1.5 rounded-full transition-all duration-500 -mt-[2px] ${
+                healthStatus === "online" 
+                  ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]" 
+                  : "bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]"
+              }`} />
+            </div>
+
+            {/* Bottom Row: Main Title */}
+            <h2 className="font-black text-xl md:text-2xl tracking-tighter text-blue-500 uppercase leading-none transition-colors group-hover:text-blue-400">
               AccountMap 
-              <span className="text-[10px] md:text-xs text-red-600 uppercase ml-1 font-bold">demo</span>
             </h2>
           </Link>
-          <div className={`h-2 w-2 rounded-full transition-all duration-500 ${
-            healthStatus === "online" 
-              ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" 
-              : "bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.4)]"
-          }`} />
         </div>
 
         {!hideControls ? (
           <>
-            {/* Desktop Actions */}
             <div className="hidden md:flex items-center gap-6 flex-1 ml-8">
               {hasData && (
                 <div className="flex items-center gap-3 border-l border-white/10 pl-6">
@@ -64,28 +68,25 @@ const Header = ({
               )}
             </div>
 
-            {/* Desktop View Controls */}
             <div className="hidden md:flex items-center gap-3">
               {hasData && (
                 <>
                   <NavButton 
                     onClick={toggleDimension}
                     disabled={currentView === "/list"}
-                    disabledLabel="Map Only"
-                    disabledSubtext="Switch to Map View to change dimensions."
                     icon={is3D ? SeriousIcons.TwoD : SeriousIcons.ThreeD} 
-                    label={is3D ? "2D Mode" : "3D Mode"}
+                    label={is3D ? "2D" : "3D"}
                   />
                   <NavButton 
                     onClick={toggleView}
                     icon={currentView === "/" ? SeriousIcons.List : SeriousIcons.Map}
-                    label={currentView === "/" ? "List View" : "Map View"}
+                    label={currentView === "/" ? "List" : "Map"}
                   />
                   <button
                     onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                    className="h-9 px-4 rounded-md transition flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase border border-white/10 bg-white/5 text-slate-400 hover:text-white"
+                    className="h-8 px-3 rounded-md transition flex items-center gap-2 text-[9px] font-bold tracking-widest uppercase border border-white/10 bg-white/5 text-slate-400 hover:text-white"
                   >
-                    <SeriousIcons.Menu className="w-4 h-4" />
+                    <SeriousIcons.Menu className="w-3 h-3" />
                     <span className="hidden lg:inline">{isSidebarOpen ? "Close" : "Menu"}</span>
                   </button>
                 </>
@@ -93,14 +94,13 @@ const Header = ({
             </div>
           </>
         ) : (
-          /* Clean "Return" UI for About Page */
-          <div className="flex items-center animate-in fade-in slide-in-from-right-4 duration-500">
+          <div className="flex items-center">
             <Link 
               to="/" 
-              className="flex items-center gap-2 px-4 py-2 md:px-6 border border-blue-500/30 bg-blue-500/5 hover:bg-blue-600 hover:text-white text-blue-400 rounded-full transition-all duration-300 group"
+              className="flex items-center gap-2 px-3 py-1.5 border border-white/10 bg-white/5 hover:bg-blue-600 hover:border-blue-600 hover:text-white text-slate-400 rounded transition-all duration-300 group"
             >
-              <SeriousIcons.Map className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">Return to Terminal</span>
+              <SeriousIcons.Map className="w-3 h-3 group-hover:rotate-12 transition-transform" />
+              <span className="text-[9px] font-black uppercase tracking-widest">Main Page</span>
             </Link>
           </div>
         )}
@@ -110,7 +110,7 @@ const Header = ({
       {hasData && !hideControls && (
         <div className="md:hidden flex items-center justify-center gap-2 px-4 py-3 border-t border-white/5 bg-white/[0.02]">
           <NavButton onClick={toggleView} icon={currentView === "/" ? SeriousIcons.List : SeriousIcons.Map} label="View" />
-          <NavButton onClick={toggleDimension} disabled={currentView === "/list"} icon={is3D ? SeriousIcons.TwoD : SeriousIcons.ThreeD} label="Perspective" />
+          <NavButton onClick={toggleDimension} disabled={currentView === "/list"} icon={is3D ? SeriousIcons.TwoD : SeriousIcons.ThreeD} label="Persp." />
           <div className="h-4 w-[1px] bg-white/10 mx-1" />
           <AddAccount onClick={onAddAccount} variant="header" />
           <AddConnection onClick={onAddConnection} variant="header" />
