@@ -82,7 +82,7 @@ const About = () => {
   return (
     <div className="absolute inset-0 bg-[#050505] z-50 overflow-y-auto custom-scrollbar flex flex-col selection:bg-blue-500 selection:text-white">
       
-      {/* HEADER - Mobile Optimized Height and Font */}
+      {/* HEADER */}
       <section className="min-h-[40vh] md:min-h-[50vh] flex flex-col justify-center px-6 md:px-20 border-b border-white/5 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent">
         <div className="flex items-center gap-4 mb-4 md:mb-6">
           <div className="px-2 py-0.5 md:px-3 md:py-1 bg-blue-600 text-white text-[8px] md:text-[10px] font-black tracking-[.3em] uppercase rounded-sm animate-pulse">
@@ -97,7 +97,7 @@ const About = () => {
         </h1>
       </section>
 
-      {/* THE ARCHITECTS GRID - Mobile spacing fixes */}
+      {/* THE ARCHITECTS GRID */}
       <section className="p-6 md:p-20 bg-black">
         <h2 className="text-blue-500 font-black text-[10px] md:text-xs uppercase tracking-[0.5em] flex items-center gap-4 mb-10 md:mb-16">
           <SeriousIcons.Sparkle className="w-4 h-4" /> Nice to meet you! 
@@ -111,13 +111,11 @@ const About = () => {
                 person.isLead ? 'border-yellow-500 shadow-[0_-20px_50px_-20px_rgba(250,204,21,0.2)]' : 'border-white/10 hover:border-blue-600'
               }`}
             >
-              <p className={`${person.isLead ? 'text-yellow-400 font-black' : 'text-blue-600'} font-mono text-[9px] md:text-[10px] mb-2 tracking-[0.3em] uppercase`}>
+              <p className={`${person.isLead ? 'text-yellow-400 font-black animate-pulse' : 'text-blue-600'} font-mono text-[9px] md:text-[10px] mb-2 tracking-[0.3em] uppercase`}>
                 [{person.role}]
               </p>
               
-              <h3 className={`text-4xl md:text-5xl font-black uppercase tracking-tighter transition-colors mb-3 md:mb-4 ${
-                person.isLead ? 'text-yellow-500 group-hover:text-white' : 'text-white group-hover:text-blue-400'
-              }`}>
+              <h3 className={`text-4xl md:text-5xl font-black uppercase tracking-tighter transition-colors mb-3 md:mb-4 ${person.isLead ? 'text-yellow-500 animate-pulse group-hover:text-white' : 'text-white group-hover:text-blue-400'}`}>
                 {person.name}
               </h3>
               
@@ -125,9 +123,7 @@ const About = () => {
                 {person.bio}
               </p>
 
-              {/* DYNAMIC CONTACTS GRID - Improved Touch Targets */}
               <div className="flex flex-col gap-2 md:gap-3 mb-8 md:mb-10">
-                
                 {(person.socials.website || person.socials.github) && (
                   <div className="flex flex-wrap gap-2">
                     {person.socials.website && (
@@ -178,7 +174,7 @@ const About = () => {
             </div>
           ))}
 
-          {/* SYSTEM CONSOLE - Mobile Hidden or Scaled Down */}
+          {/* SYSTEM CONSOLE */}
           <div className="xl:col-span-1 bg-[#070707] border border-blue-500/20 rounded-lg p-5 font-mono text-[10px] h-[300px] flex flex-col shadow-2xl relative overflow-hidden">
             <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-3">
               <div className="flex items-center gap-1.5">
@@ -202,15 +198,11 @@ const About = () => {
         </div>
       </section>
 
-      {/* SPACER - Added extra height for Mobile Fixed Buttons */}
       <div className="h-40 md:h-32 w-full" />
 
-      {/* FOOTER - Stacked on Mobile */}
       <footer className="sticky bottom-0 w-full mt-auto z-[60]">
         <div className="absolute inset-0 bg-[#050505]/95 backdrop-blur-xl border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]" />
-        
         <div className="relative px-6 py-4 md:px-8 md:py-5 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
-          
           <div className="flex items-center gap-4">
             <div className="flex gap-3 opacity-30">
                <SeriousIcons.TwoD className="w-3.5 h-3.5" />
@@ -220,7 +212,6 @@ const About = () => {
               Make-It-Wright 2026
             </span>
           </div>
-
           <div className="flex flex-col items-center md:items-end">
             <p className="text-slate-500 text-[9px] md:text-[10px] font-black uppercase tracking-[.2em]">
               © {new Date().getFullYear()} AccountMap

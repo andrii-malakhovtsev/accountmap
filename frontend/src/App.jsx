@@ -113,63 +113,28 @@ function AppContent() {
         )}
 
         <Routes>
-          <Route path="/" element={
-            <MapView 
-              nodes={processedNodes} 
-              links={mapLinks} 
-              onSelectAccount={handleSelect} 
-              selectedId={selectedId} 
-              is3D={is3D} 
-            />
-          } />
-          <Route path="/list" element={
-            <ListView 
-              entities={entities} 
-              onSelectAccount={handleSelect} 
-              selectedId={selectedId} 
-            />
-          } />
+          <Route path="/" element={<MapView nodes={processedNodes} links={mapLinks} onSelectAccount={handleSelect} selectedId={selectedId} is3D={is3D} />} />
+          <Route path="/list" element={<ListView entities={entities} onSelectAccount={handleSelect} selectedId={selectedId} />} />
           <Route path="/about" element={<About />} />
         </Routes>
       </main>
 
       {!isAboutPage && (
-        <Link
-          to="/about"
-          className="fixed bottom-6 left-8 z-[150] flex items-center gap-4 p-1 group cursor-pointer"
-        >
-          <div className="w-14 h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-500 bg-black border-white/20 hover:border-blue-500 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.3)]">
-            <SeriousIcons.Info className="w-6 h-6 text-blue-500" />
-          </div>
-          <div className="flex flex-col text-left">
-            <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 group-hover:text-white transition-colors">
-              About Page
-            </span>
-            <span className="text-[8px] text-slate-700 font-mono mt-0.5 uppercase tracking-tighter">
-              Check out the team
-            </span>
-          </div>
-        </Link>
-      )}
-
-      {!isAboutPage && (
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-          viewMode={viewMode}
-          selectedAccount={selectedEntity}
-          onSelectAccount={handleSelect}
-          rawEntities={entities}
-        />
+        <>
+          <Link to="/about" className="fixed bottom-6 left-8 z-[150] flex items-center gap-4 p-1 group cursor-pointer">
+            <div className="w-14 h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-500 bg-black border-white/20 hover:border-blue-500 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.3)]">
+              <SeriousIcons.Info className="w-6 h-6 text-blue-500" />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 group-hover:text-white transition-colors">About Page</span>
+              <span className="text-[8px] text-slate-700 font-mono mt-0.5 uppercase tracking-tighter">Check out the team</span>
+            </div>
+          </Link>
+          <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} viewMode={viewMode} selectedAccount={selectedEntity} onSelectAccount={handleSelect} rawEntities={entities} />
+        </>
       )}
     </div>
   );
 }
 
-export default function App() {
-  return (
-    <Router>
-      <AppContent />
-    </Router>
-  );
-}
+export default function App() { return ( <Router> <AppContent /> </Router> ); }
