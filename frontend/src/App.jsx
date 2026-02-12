@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Link } from "react-router-dom";
 import Header from "../components/Header/Header";
 import Sidebar from "./../components/Sidebar/Sidebar";
 import SeriousIcons from "../components/SeriousIcons";
@@ -22,7 +22,6 @@ function AppContent() {
   const [viewMode, setViewMode] = useState("view");
   const [is3D, setIs3D] = useState(false);
 
-  // Health Check logic
   useEffect(() => {
     const checkRelay = async () => {
       try {
@@ -100,7 +99,6 @@ function AppContent() {
       />
 
       <main className="flex-1 relative bg-[#0a0a0a] overflow-hidden">
-        {/* Global Loading Overlay */}
         {healthStatus !== "online" && (
           <div className="absolute inset-0 z-[100] flex items-center justify-center bg-[#0a0a0a]/60 pointer-events-none">
             <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
@@ -135,10 +133,10 @@ function AppContent() {
         </Routes>
       </main>
 
-      {/* About Page Entry Button */}
+      {/* FIXED: Changed <a> to <Link> to handle client-side routing */}
       {!isAboutPage && (
-        <a
-          href="/about"
+        <Link
+          to="/about"
           className="fixed bottom-6 left-8 z-[150] flex items-center gap-4 p-1 group cursor-pointer"
         >
           <div className="w-14 h-14 flex items-center justify-center rounded-xl border-2 transition-all duration-500 bg-black border-white/20 hover:border-blue-500 group-hover:shadow-[0_0_20px_rgba(37,99,235,0.3)]">
@@ -152,7 +150,7 @@ function AppContent() {
               Check out the team
             </span>
           </div>
-        </a>
+        </Link>
       )}
 
       {!isAboutPage && (
