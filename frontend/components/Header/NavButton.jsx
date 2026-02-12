@@ -2,46 +2,41 @@ import React from 'react';
 
 const NavButton = ({ 
   onClick, 
-  icon, 
+  icon: Icon, 
   label, 
   subtext, 
   colorClass = "bg-white/5", 
-  iconColor = "text-white",
+  iconColor = "text-slate-400",
   disabled = false,
   disabledLabel, 
   disabledSubtext 
 }) => {
   return (
-    <div className={`group relative flex items-center justify-center ${disabled ? 'cursor-not-allowed' : ''}`}>
+    <div className={`group relative flex items-center justify-center ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
       <button 
         onClick={disabled ? null : onClick}
         disabled={disabled}
-        className={`flex items-center justify-center w-9 h-9 ${colorClass} border border-white/10 rounded-lg transition-all 
+        className={`flex items-center justify-center w-9 h-9 ${colorClass} border border-white/10 rounded-md transition-all cursor-pointer
           ${disabled 
-            ? 'opacity-30 grayscale pointer-events-none' 
-            : 'hover:brightness-110 active:scale-95'}`}
+            ? 'opacity-20 pointer-events-none' 
+            : 'hover:bg-white/10 hover:border-blue-500/50 active:scale-95'}`}
         aria-label={label}
       >
-        <span className={`${iconColor} text-lg leading-none`}>{icon}</span>
+        {Icon && <Icon className={`w-4 h-4 ${iconColor} transition-colors group-hover:text-blue-400`} />}
       </button>
 
-      {/* TOOLTIP */}
+      {/* Tooltip logic remains same... */}
       <div className="absolute top-12 left-1/2 -translate-x-1/2 scale-90 opacity-0 group-hover:opacity-100 group-hover:scale-100 transition-all duration-200 pointer-events-none z-[100] origin-top">
-        <div className="bg-[#151515] border border-white/10 p-3 rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] backdrop-blur-xl w-48 text-center">
-          
-          <p className="text-[10px] font-black text-white uppercase tracking-[0.15em] mb-1">
-            {disabled ? (disabledLabel || "Disabled in List") : label}
+        <div className="bg-[#0d1117] border border-white/10 p-2 rounded-md shadow-2xl w-40 text-center">
+          <p className="text-[10px] font-bold text-white uppercase tracking-tight">
+            {disabled ? (disabledLabel || "Locked") : label}
           </p>
-          
           {subtext && (
-            <p className="text-[9px] text-gray-500 font-medium leading-relaxed normal-case">
-              {disabled 
-                ? (disabledSubtext || "Switch back to Map View to change dimensions.") 
-                : subtext}
+            <p className="text-[9px] text-slate-500 mt-1 leading-tight normal-case">
+              {disabled ? (disabledSubtext || "Unavailable") : subtext}
             </p>
           )}
-
-          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#151515] border-t border-l border-white/10 rotate-45" />
+          <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#0d1117] border-t border-l border-white/10 rotate-45" />
         </div>
       </div>
     </div>

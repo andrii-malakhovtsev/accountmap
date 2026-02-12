@@ -1,5 +1,6 @@
 import React, { useRef } from "react";
 import NavButton from "./NavButton";
+import SeriousIcons from "../SeriousIcons";
 import { parseCSV } from "../../src/utils/csvParser";
 import updateDataStore from "../../src/store/updateDataStore";
 
@@ -24,7 +25,7 @@ const UploadCSV = () => {
       console.error("Error parsing CSV:", error);
       alert("Failed to parse CSV file");
     } finally {
-      event.target.value = ""; // Clear for next upload
+      event.target.value = ""; 
     }
   };
 
@@ -32,11 +33,11 @@ const UploadCSV = () => {
     <>
       <NavButton
         onClick={() => fileInputRef.current?.click()}
-        icon="📥"
+        icon={SeriousIcons.Upload}
         label="Upload CSV"
         subtext="We remove passwords before sending to the server!"
         colorClass="bg-white/5 hover:bg-white/10"
-        iconColor="text-blue-400"
+        iconColor="text-slate-400"
       />
       <input
         ref={fileInputRef}
