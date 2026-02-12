@@ -108,34 +108,36 @@ const About = () => {
             <div 
               key={idx} 
               className={`group border-t pt-6 md:pt-8 transition-all duration-500 ${
-                person.isLead ? 'border-yellow-500 shadow-[0_-20px_50px_-20px_rgba(250,204,21,0.2)]' : 'border-white/10 hover:border-blue-600'
+                person.isLead ? 'border-yellow-500 shadow-[0_-20px_50px_-20px_rgba(250,204,21,0.2)]' : 'border-blue-600/30 hover:border-blue-500'
               }`}
             >
-              <p className={`${person.isLead ? 'text-yellow-400 font-black animate-pulse' : 'text-blue-600'} font-mono text-[9px] md:text-[10px] mb-2 tracking-[0.3em] uppercase`}>
+              <p className={`${person.isLead ? 'text-yellow-400 font-black' : 'text-blue-500'} font-mono text-[9px] md:text-[10px] mb-2 tracking-[0.3em] uppercase`}>
                 [{person.role}]
               </p>
               
-              <h3 className={`text-4xl md:text-5xl font-black uppercase tracking-tighter transition-colors mb-3 md:mb-4 ${person.isLead ? 'text-yellow-500 animate-pulse group-hover:text-white' : 'text-white group-hover:text-blue-400'}`}>
+              {/* Animation removed from name per request */}
+              <h3 className={`text-4xl md:text-5xl font-black uppercase tracking-tighter transition-colors mb-3 md:mb-4 ${person.isLead ? 'text-yellow-500' : 'text-white group-hover:text-blue-400'}`}>
                 {person.name}
               </h3>
               
-              <p className="text-slate-400 text-sm leading-relaxed max-w-sm mb-8 md:mb-10">
+              <p className="text-slate-300 text-sm leading-relaxed max-w-sm mb-8 md:mb-10 font-medium">
                 {person.bio}
               </p>
 
+              {/* DYNAMIC CONTACTS GRID - High Contrast Electric Blue */}
               <div className="flex flex-col gap-2 md:gap-3 mb-8 md:mb-10">
                 {(person.socials.website || person.socials.github) && (
                   <div className="flex flex-wrap gap-2">
                     {person.socials.website && (
                       <a href={person.socials.website} target="_blank" rel="noreferrer" className={`flex-1 min-w-[120px] text-center py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all rounded-sm border ${
-                        person.isLead ? 'border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/10' : 'border-white/20 text-white hover:bg-white/10'
+                        person.isLead ? 'border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/20' : 'border-blue-500/30 text-blue-400 bg-blue-500/5 hover:bg-blue-500/20 hover:text-white hover:border-blue-500'
                       }`}>
                         Portfolio
                       </a>
                     )}
                     {person.socials.github && (
                       <a href={person.socials.github} target="_blank" rel="noreferrer" className={`flex-1 min-w-[120px] text-center py-3 text-[10px] font-black uppercase tracking-[0.2em] transition-all rounded-sm border ${
-                        person.isLead ? 'border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/10' : 'border-white/20 text-white hover:bg-white/10'
+                        person.isLead ? 'border-yellow-500/40 text-yellow-500 hover:bg-yellow-500/20' : 'border-blue-500/30 text-blue-400 bg-blue-500/5 hover:bg-blue-500/20 hover:text-white hover:border-blue-500'
                       }`}>
                         GitHub
                       </a>
@@ -145,13 +147,17 @@ const About = () => {
 
                 <div className="flex gap-2">
                   {person.socials.linkedin && (
-                    <a href={person.socials.linkedin} target="_blank" rel="noreferrer" className="flex-1 text-center py-3 text-[9px] font-bold text-slate-500 border border-white/5 hover:text-white hover:border-white/20 transition-all uppercase tracking-widest">
+                    <a href={person.socials.linkedin} target="_blank" rel="noreferrer" className={`flex-1 text-center py-3 text-[9px] font-black transition-all rounded-sm border uppercase tracking-widest ${
+                      person.isLead ? 'border-yellow-500/20 text-yellow-600 hover:text-yellow-400' : 'border-blue-500/20 text-blue-500 hover:text-blue-300 hover:border-blue-500/50'
+                    }`}>
                       LinkedIn
                     </a>
                   )}
                   {person.socials.discord && (
                     <div className="group/disc flex-1 relative">
-                      <button className="w-full text-center py-3 text-[9px] font-bold text-slate-500 border border-white/5 hover:text-white hover:border-white/20 transition-all uppercase tracking-widest">
+                      <button className={`w-full text-center py-3 text-[9px] font-black transition-all rounded-sm border uppercase tracking-widest ${
+                        person.isLead ? 'border-yellow-500/20 text-yellow-600 hover:text-yellow-400' : 'border-blue-500/20 text-blue-500 hover:text-blue-300 hover:border-blue-500/50'
+                      }`}>
                         Discord
                       </button>
                       <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 opacity-0 group-hover/disc:opacity-100 transition-all bg-blue-600 text-white text-[9px] px-2 py-1 font-mono rounded pointer-events-none shadow-xl z-20 whitespace-nowrap">
@@ -165,7 +171,7 @@ const About = () => {
               <div className="flex flex-wrap gap-1.5 md:gap-2">
                 {person.tags.map(tag => (
                   <span key={tag} className={`text-[7px] md:text-[8px] px-2 py-1 border uppercase font-black tracking-widest ${
-                    person.isLead ? 'border-yellow-500/20 text-yellow-500/40' : 'border-white/5 text-slate-700'
+                    person.isLead ? 'border-yellow-500/20 text-yellow-500/40' : 'border-blue-500/20 text-blue-400/50'
                   }`}>
                     {tag}
                   </span>
@@ -200,6 +206,7 @@ const About = () => {
 
       <div className="h-40 md:h-32 w-full" />
 
+      {/* FOOTER */}
       <footer className="sticky bottom-0 w-full mt-auto z-[60]">
         <div className="absolute inset-0 bg-[#050505]/95 backdrop-blur-xl border-t border-white/5 shadow-[0_-10px_40px_rgba(0,0,0,0.8)]" />
         <div className="relative px-6 py-4 md:px-8 md:py-5 flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
