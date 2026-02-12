@@ -99,13 +99,13 @@ function AppContent() {
       />
 
       <main className="flex-1 relative bg-[#0a0a0a] overflow-hidden">
-        {healthStatus !== "online" && (
-          <div className="absolute inset-0 z-[100] flex items-center justify-center bg-[#0a0a0a]/60 pointer-events-none">
+        {healthStatus !== "online" && !isAboutPage && (
+          <div className="absolute inset-0 z-[100] flex items-center justify-center pointer-events-none">
             <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
-              <div className="flex items-center gap-3 px-5 py-2.5 bg-black/90 border border-white/10 rounded-full shadow-2xl">
-                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]" />
+              <div className="flex items-center gap-3 px-6 py-3 bg-black/90 border border-white/10 rounded-full shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-md">
+                <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.8)]" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
-                  Connecting to Neural Relay...
+                  Waking Up Back-End Just For You! Takes about 50 seconds...
                 </span>
               </div>
             </div>
@@ -133,7 +133,6 @@ function AppContent() {
         </Routes>
       </main>
 
-      {/* FIXED: Changed <a> to <Link> to handle client-side routing */}
       {!isAboutPage && (
         <Link
           to="/about"
