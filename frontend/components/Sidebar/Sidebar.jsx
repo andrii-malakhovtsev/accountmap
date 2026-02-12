@@ -14,7 +14,6 @@ const Sidebar = ({
   onSelectAccount,
   rawEntities,
 }) => {
-  console.log("selectedAccount in Sidebar:", selectedAccount);
   const [form, setForm] = useState({
     name: "",
     username: "",
@@ -26,6 +25,7 @@ const Sidebar = ({
   const [isLinking, setIsLinking] = useState(false);
   const [linkTargetId, setLinkTargetId] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  
   const {
     createAccount,
     createConnection,
@@ -41,20 +41,15 @@ const Sidebar = ({
   useEffect(() => {
     setForm({ name: "", username: "", notes: "", type: "mail", value: "" });
     setErrors({});
+    setConfirmDelete(false);
   }, [viewMode, isOpen]);
 
   useEffect(() => {
-    if (!isOpen || viewMode !== "view") {
+    if (!isOpen || viewMode !== "view" || viewMode === "list") {
       setIsLinking(false);
       setLinkTargetId(null);
     }
   }, [isOpen, viewMode, selectedAccount]);
-
-  useEffect(() => {
-    if (!isOpen || viewMode !== "view" || isLinking) {
-      setConfirmDelete(false);
-    }
-  }, [isOpen, viewMode, isLinking, selectedAccount]);
 
   const validate = (name, value, currentType) => {
     let error = "";
@@ -62,24 +57,13 @@ const Sidebar = ({
       if (!value.trim()) {
         error = "Value is required";
       } else if (currentType === "mail" && !value.includes("@")) {
-        error = "Invalid email address (missing @)";
-      } else if (currentType === "phone") {
-        // Must start with + and contain only digits after that
-        const phoneRegex = /^\+[0-9]+$/;
-        if (!value.startsWith("+")) {
-          error = "Phone must start with +";
-        } else if (!phoneRegex.test(value)) {
-          error = "Digits only after +";
-        } else if (value.length < 8) {
-          error = "Number too short";
-        }
+        error = "Invalid email address";
+      } else if (currentType === "phone" && !value.startsWith("+")) {
+        error = "Phone must start with +";
       }
-      // Auth type has no parsing/regex, just the "Value is required" check above
     }
-
     if (name === "name" && !value.trim()) error = "Name is required";
     if (name === "username" && !value.trim()) error = "Username is required";
-
     return error;
   };
 
@@ -95,12 +79,8 @@ const Sidebar = ({
   const isConnection = !!selectedAccount?.accounts;
 
   const isValid = useMemo(() => {
-    if (viewMode === "createAccount") {
-      return form.name && form.username && !errors.name && !errors.username;
-    }
-    if (viewMode === "createConnection") {
-      return form.value && !errors.value;
-    }
+    if (viewMode === "createAccount") return form.name && form.username && !errors.name && !errors.username;
+    if (viewMode === "createConnection") return form.value && !errors.value;
     return true;
   }, [viewMode, form, errors]);
 
@@ -119,25 +99,14 @@ const Sidebar = ({
       const uniqueAccounts = new Map();
       (rawEntities || []).forEach((conn) => {
         (conn.accounts || []).forEach((acc) => {
-          if (!uniqueAccounts.has(acc.id)) {
-            uniqueAccounts.set(acc.id, acc);
-          }
+          if (!uniqueAccounts.has(acc.id)) uniqueAccounts.set(acc.id, acc);
         });
       });
-      const linkedAccountIds = new Set(
-        (selectedAccount.accounts || []).map((acc) => acc.id),
-      );
-      return Array.from(uniqueAccounts.values()).filter(
-        (acc) => !linkedAccountIds.has(acc.id),
-      );
+      const linkedAccountIds = new Set((selectedAccount.accounts || []).map((acc) => acc.id));
+      return Array.from(uniqueAccounts.values()).filter((acc) => !linkedAccountIds.has(acc.id));
     }
-
-    const linkedConnectionIds = new Set(
-      sidebarConnections.map((conn) => conn.id),
-    );
-    return (rawEntities || []).filter(
-      (conn) => !linkedConnectionIds.has(conn.id),
-    );
+    const linkedConnectionIds = new Set(sidebarConnections.map((conn) => conn.id));
+    return (rawEntities || []).filter((conn) => !linkedConnectionIds.has(conn.id));
   }, [selectedAccount, rawEntities, isConnection, viewMode, sidebarConnections]);
 
   const activeIconKey = useMemo(() => {
@@ -147,185 +116,119 @@ const Sidebar = ({
     return isConnection ? selectedAccount.type : selectedAccount.name;
   }, [viewMode, form.name, form.type, selectedAccount, isConnection]);
 
-  const linkLabel = isConnection ? "Link to Account" : "Link to Connection";
-  const isLinkDisabled = !linkTargetId || loading;
-
   const headerTitle = useMemo(() => {
-    if (viewMode === "view") {
-      if (isLinking) return linkLabel;
-      return selectedAccount?.name || selectedAccount?.type || "Details";
-    }
-    if (viewMode === "createAccount") return "New Account";
-    return "New Connection";
-  }, [viewMode, isLinking, linkLabel, selectedAccount]);
+    if (viewMode === "list") return "Identity List";
+    if (viewMode === "view") return isLinking ? (isConnection ? "Link Account" : "Link Connection") : (selectedAccount?.name || "Details");
+    return viewMode === "createAccount" ? "New Account" : "New Connection";
+  }, [viewMode, isLinking, selectedAccount]);
 
   const handleCreate = async () => {
-    try {
-      if (viewMode === "createAccount") {
-        await createAccount(form);
-        setForm({ name: "", username: "", notes: "", type: "mail", value: "" });
-      } else if (viewMode === "createConnection") {
-        await createConnection(form);
-        setForm({ name: "", username: "", notes: "", type: "mail", value: "" });
-      }
-      onClose();
-    } catch (err) {
-      console.error("Error creating:", err);
-    }
+    if (viewMode === "createAccount") await createAccount(form);
+    else await createConnection(form);
+    onClose();
   };
 
   const handleLink = async () => {
-    if (!selectedAccount || !linkTargetId) return;
     const payload = isConnection
       ? { accountId: linkTargetId, identityId: selectedAccount.id }
       : { accountId: selectedAccount.id, identityId: linkTargetId };
-
-    try {
-      await linkConnection(payload);
-      setIsLinking(false);
-      setLinkTargetId(null);
-    } catch (err) {
-      console.error("Error linking:", err);
-    }
+    await linkConnection(payload);
+    setIsLinking(false);
+    setLinkTargetId(null);
   };
 
   const handleDelete = async () => {
-    if (!selectedAccount || loading) return;
-    if (!confirmDelete) {
-      setConfirmDelete(true);
-      return;
-    }
-
-    try {
-      if (isConnection) {
-        await deleteIdentity(selectedAccount.id);
-      } else {
-        await deleteAccount(selectedAccount.id);
-      }
-      setConfirmDelete(false);
-      onClose();
-    } catch (err) {
-      console.error("Error deleting:", err);
-    }
+    if (!confirmDelete) { setConfirmDelete(true); return; }
+    if (isConnection) await deleteIdentity(selectedAccount.id);
+    else await deleteAccount(selectedAccount.id);
+    onClose();
   };
 
-  useEffect(() => {
-    if (success) {
-      resetState();
-    }
-  }, [success]);
+  useEffect(() => { if (success) resetState(); }, [success]);
 
   return (
     <aside
-      className={`absolute right-0 top-20 bottom-0 w-80 bg-[#0f0f0f]/95 backdrop-blur-xl border-l border-white/10 flex flex-col z-[1000] transition-all duration-300 
-        ${isOpen 
-          ? "translate-x-0 opacity-100 visible pointer-events-auto" 
-          : "translate-x-full opacity-0 invisible pointer-events-none"
-        }`}
+      className={`fixed md:absolute right-0 top-0 md:top-20 bottom-0 w-full md:w-80 bg-[#0f0f0f]/98 md:bg-[#0f0f0f]/95 backdrop-blur-2xl border-l border-white/10 flex flex-col z-[2000] md:z-[1000] transition-all duration-300 transform 
+        ${isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none"}`}
     >
-      <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-        <div className="flex flex-col items-center mb-8 relative">
-          <button
-            onClick={onClose}
-            className="absolute -top-4 -right-4 p-2 text-gray-500 hover:text-white"
-          >
-            ✕
-          </button>
+      <div className="flex items-center justify-between px-6 py-4 md:hidden border-b border-white/5">
+         <button onClick={onClose} className="text-gray-400 text-sm font-bold uppercase tracking-widest flex items-center gap-2">
+            <span className="text-lg">←</span> Back
+         </button>
+         <h3 className="text-[10px] font-black uppercase text-blue-500 tracking-[0.2em]">Context</h3>
+      </div>
 
-          <div className="w-20 h-20 rounded-2xl bg-white flex items-center justify-center p-4 mb-4 shadow-2xl overflow-hidden">
-            <img
-              src={getIconUrl(activeIconKey)}
-              className="max-w-full max-h-full object-contain"
-              alt=""
-              onError={(e) => {
-                e.target.src =
-                  "https://cdn-icons-png.flaticon.com/512/633/633600.png";
-              }}
-            />
-          </div>
+      <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
+        <div className="flex flex-col items-center mb-8 relative">
+          <button onClick={onClose} className="hidden md:block absolute -top-4 -right-4 p-2 text-gray-500 hover:text-white transition-colors">✕</button>
+
+          {viewMode !== "list" && (
+            <div className="w-20 h-20 md:w-24 md:h-24 rounded-2xl bg-white flex items-center justify-center p-4 mb-4 shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+              <img
+                src={getIconUrl(activeIconKey)}
+                className="max-w-full max-h-full object-contain"
+                alt=""
+                onError={(e) => { e.target.src = "https://cdn-icons-png.flaticon.com/512/633/633600.png"; }}
+              />
+            </div>
+          )}
+          
           <h2 className="text-xl font-black text-white uppercase text-center truncate w-full tracking-tighter">
             {headerTitle}
           </h2>
         </div>
 
-        {viewMode === "createAccount" && (
-          <SidebarAccountForm
-            form={form}
-            errors={errors}
-            onChange={handleChange}
-          />
-        )}
-        {viewMode === "createConnection" && (
-          <SidebarConnectionForm
-            form={form}
-            errors={errors}
-            onChange={handleChange}
-          />
-        )}
-        {viewMode === "view" && selectedAccount && !isLinking && (
-          <SidebarView
-            selectedAccount={selectedAccount}
-            connections={sidebarConnections}
-            onSelectAccount={onSelectAccount}
-            onStartLink={() => setIsLinking(true)}
-          />
-        )}
-        {viewMode === "view" && selectedAccount && isLinking && (
-          <SidebarLinkView
-            targets={linkTargets}
-            label={isConnection ? "Account" : "Connection"}
-            selectedId={linkTargetId}
-            onBack={() => setIsLinking(false)}
-            onPick={(item) => setLinkTargetId(item.id)}
-          />
-        )}
+        <div className="space-y-6">
+          {viewMode === "createAccount" && <SidebarAccountForm form={form} errors={errors} onChange={handleChange} />}
+          {viewMode === "createConnection" && <SidebarConnectionForm form={form} errors={errors} onChange={handleChange} />}
+          
+          {viewMode === "list" && (
+             <div className="text-center py-10 px-4 border border-dashed border-white/10 rounded-2xl">
+               <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest leading-relaxed">
+                 You are in List View. Select an identity from the table to view details or switch back to Map.
+               </p>
+             </div>
+          )}
+
+          {viewMode === "view" && selectedAccount && !isLinking && (
+            <SidebarView selectedAccount={selectedAccount} connections={sidebarConnections} onSelectAccount={onSelectAccount} onStartLink={() => setIsLinking(true)} />
+          )}
+          {viewMode === "view" && selectedAccount && isLinking && (
+            <SidebarLinkView targets={linkTargets} label={isConnection ? "Account" : "Connection"} selectedId={linkTargetId} onBack={() => setIsLinking(false)} onPick={(item) => setLinkTargetId(item.id)} />
+          )}
+        </div>
       </div>
 
-      <div className="p-4 border-t border-white/5 bg-black/20 space-y-3">
-        {viewMode !== "view" ? (
-          <>
-            <button
-              disabled={!isValid || loading}
-              onClick={handleCreate}
-              className={`w-full py-3 text-[10px] font-black rounded-md uppercase tracking-[0.2em] transition-all duration-300 ${isValid && !loading ? "bg-blue-600 text-white cursor-pointer hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)]" : "bg-gray-800 text-gray-500 cursor-not-allowed"}`}
-            >
-              {loading ? "Creating..." : "Create"}
-            </button>
-            {error && (
-              <p className="text-red-500 text-xs text-center">{error}</p>
-            )}
-          </>
-        ) : isLinking ? (
-          <div className="space-y-3">
-            <button
-              disabled={isLinkDisabled}
-              onClick={handleLink}
-              className={`w-full py-3 text-[10px] font-black rounded-md uppercase tracking-[0.2em] transition-all duration-300 ${isLinkDisabled ? "bg-gray-800 text-gray-500 cursor-not-allowed" : "bg-blue-600 text-white cursor-pointer hover:bg-blue-500 shadow-[0_0_15px_rgba(37,99,235,0.4)]"}`}
-            >
-              {loading ? "Linking..." : "Link"}
-            </button>
-            <button
-              onClick={() => setIsLinking(false)}
-              className="w-full py-3 bg-white/5 text-white text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-white/10 transition-colors"
-            >
-              Back to Details
-            </button>
-          </div>
-        ) : (
-          <>
-            <button className="w-full py-3 bg-white/5 text-white text-[10px] font-black rounded-md uppercase tracking-[0.2em] hover:bg-white/10 transition-colors">
-              Save
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={loading}
-              className={`w-full py-3 border text-[10px] font-black rounded-md uppercase tracking-[0.2em] transition-colors ${confirmDelete ? "border-red-500/60 text-red-300 bg-red-900/20 hover:bg-red-900/30" : "border-red-900/30 text-red-500/70 hover:bg-red-900/10"} ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
-            >
-              {confirmDelete ? "Click again to delete" : "Delete"}
-            </button>
-          </>
-        )}
-      </div>
+      {viewMode !== "list" && (
+        <div className="p-6 border-t border-white/5 bg-black/40 space-y-3 pb-10 md:pb-6">
+          {viewMode !== "view" ? (
+            <>
+              <button disabled={!isValid || loading} onClick={handleCreate} className={`w-full py-4 md:py-3 text-[10px] font-black rounded-xl uppercase tracking-[0.2em] transition-all ${isValid && !loading ? "bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)]" : "bg-gray-800 text-gray-500"}`}>
+                {loading ? "Creating..." : "Create"}
+              </button>
+              {error && <p className="text-red-500 text-[10px] text-center uppercase font-bold">{error}</p>}
+            </>
+          ) : isLinking ? (
+            <div className="space-y-3">
+              <button disabled={!linkTargetId || loading} onClick={handleLink} className={`w-full py-4 md:py-3 text-[10px] font-black rounded-xl uppercase tracking-[0.2em] transition-all ${!linkTargetId || loading ? "bg-gray-800 text-gray-500" : "bg-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.3)]"}`}>
+                {loading ? "Linking..." : "Link"}
+              </button>
+              <button onClick={() => setIsLinking(false)} className="w-full py-4 md:py-3 bg-white/5 text-white text-[10px] font-black rounded-xl uppercase tracking-[0.2em]">Back</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              <button className="py-4 md:py-3 bg-white/5 text-white text-[10px] font-black rounded-xl uppercase tracking-[0.2em]">Save</button>
+              <button
+                onClick={handleDelete}
+                disabled={loading}
+                className={`py-4 md:py-3 border text-[10px] font-black rounded-xl uppercase tracking-[0.15em] transition-all ${confirmDelete ? "border-red-500 bg-red-500/10 text-red-500" : "border-red-900/30 text-red-500/70"}`}
+              >
+                {confirmDelete ? "Confirm" : "Delete"}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </aside>
   );
 };

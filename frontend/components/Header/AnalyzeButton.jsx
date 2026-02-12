@@ -5,27 +5,19 @@ const AnalyzeButton = ({ onResult }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const handleAnalyze = async () => {
-    if (typeof onResult !== "function") {
-      console.error("AnalyzeButton: onResult prop is missing!");
-      return;
-    }
+    if (isAnalyzing) return;
+    if (typeof onResult !== "function") return;
 
     setIsAnalyzing(true);
     onResult(null); 
     
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/analyze`);
-      
-      if (!response.ok) {
-        if (response.status === 404) throw new Error("Endpoint not found (404)");
-        throw new Error("Analysis failed");
-      }
-      
+      if (!response.ok) throw new Error("Analysis failed");
       const data = await response.text(); 
       onResult(data);
     } catch (err) {
-      console.error("AI Error:", err);
-      onResult(`Error: ${err.message}. Ensure backend is running.`);
+      onResult(`Error: ${err.message}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -34,8 +26,11 @@ const AnalyzeButton = ({ onResult }) => {
   return (
     <NavButton
       onClick={handleAnalyze}
+      disabled={isAnalyzing}
+      disabledLabel="AI Thinking"
+      disabledSubtext="The AI is currently analyzing your data. Please wait..."
       icon={isAnalyzing ? "⌛" : "✨"}
-      label={isAnalyzing ? "Analyzing..." : "AI Analyze"}
+      label="AI Analyze"
       subtext="Run a quick analysis of your map"
       colorClass={isAnalyzing ? "bg-blue-900/20 animate-pulse" : "bg-white/5 hover:bg-white/10"}
       iconColor="text-blue-400"

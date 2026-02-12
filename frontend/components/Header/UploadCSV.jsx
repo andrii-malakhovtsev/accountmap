@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import NavButton from "./NavButton";
-import { parseCSV } from "../../src/utils/csvParser"; // Adjust path if needed
-import updateDataStore from "../../src/store/updateDataStore"; // Adjust path if needed
+import { parseCSV } from "../../src/utils/csvParser";
+import updateDataStore from "../../src/store/updateDataStore";
 
 const UploadCSV = () => {
   const fileInputRef = useRef(null);

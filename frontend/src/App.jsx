@@ -15,6 +15,7 @@ function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [selectedId, setSelectedId] = useState(null);
   const [viewMode, setViewMode] = useState("view");
+  const [is3D, setIs3D] = useState(false);
 
   useEffect(() => {
     const checkRelay = async () => {
@@ -49,16 +50,12 @@ function App() {
     }
   }, [users]);
 
-  // --- STABILIZED DATA TRANSFORMATION ---
-  // We use useMemo to ensure that nodes and links keep the same references
-  // unless 'entities' actually changes.
   const { processedNodes, mapLinks } = useMemo(() => {
     const nodes = [];
     const links = [];
     const seenAccountIds = new Set();
 
     entities.forEach((conn) => {
-      // Create a stable node object for the connection
       const connectionNode = { ...conn };
       nodes.push(connectionNode);
 
@@ -78,8 +75,6 @@ function App() {
     return { processedNodes: nodes, mapLinks: links };
   }, [entities]);
 
-  // This prevents the MapView from re-rendering every time App.jsx cycles.
-  // Fix for the "dead click" issue in 2D (ONLY PULLS UP IN PROD)
   const handleSelect = useCallback((entity, mode = "view") => {
     const id = entity?.id || null;
     setSelectedId(id);
@@ -102,7 +97,9 @@ function App() {
         setIsSidebarOpen={setIsSidebarOpen}
         onAddAccount={() => handleSelect(null, "createAccount")}
         onAddConnection={() => handleSelect(null, "createConnection")}
-        healthStatus={healthStatus} 
+        healthStatus={healthStatus}
+        is3D={is3D}
+        setIs3D={setIs3D}
       />
 
       <main className="flex-1 relative bg-[#0a0a0a] overflow-hidden">
@@ -130,6 +127,7 @@ function App() {
             links={mapLinks}
             onSelectAccount={handleSelect}
             selectedId={selectedId}
+            is3D={is3D}
           />
         ) : (
           <ListView
