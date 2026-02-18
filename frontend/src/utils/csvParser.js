@@ -4,38 +4,33 @@ export function parseCSV(file) {
 
     reader.onload = (event) => {
       const csvContent = event.target.result;
-      const lines = csvContent.split("\n");
-      const headers = lines[0].split(",");
+      // Handle both Windows (\r\n) and Mac/Linux (\n) line endings
+      const lines = csvContent.split(/\r?\n/); 
+      const headers = lines[0].split(",").map(h => h.trim());
 
       const data = lines
         .slice(1)
         .map((line) => {
           if (!line.trim()) return null;
 
+          // Standard CSV split (Note: this doesn't handle commas inside quotes, 
+          // but it works for standard browser exports)
           const values = line.split(",");
           const obj = {};
 
           headers.forEach((header, index) => {
-            obj[header.trim()] = values[index]?.trim() || "";
+            // Store EVERYTHING found in the CSV into the object
+            obj[header] = values[index]?.trim() || "";
           });
 
-          // Only return the fields you need
-          return {
-            name: obj.name,
-            url: obj.url,
-            username: obj.username,
-            note: obj.note,
-          };
+          return obj; 
         })
         .filter(Boolean);
 
       resolve(data);
     };
 
-    reader.onerror = () => {
-      reject(new Error("Failed to read file"));
-    };
-
+    reader.onerror = () => reject(new Error("Failed to read file"));
     reader.readAsText(file);
   });
 }

@@ -284,73 +284,55 @@ router.delete("/:id", async (req: any, res: any) => {
 
 
 async function sanitizeAccount(req: any, res: any, next: any) {
-	try {
-		const payload = req.body;
+    try {
+        const payload = req.body;
+        if (!Array.isArray(payload)) {
+            return res.status(400).json({ error: "Request must be an array" });
+        }
 
-		if (!Array.isArray(payload)) {
-			return res.status(400).json({ error: "Request body must be an array of accounts" });
-		}
+        const user = await get_default_user();
+        if (!user) return res.status(500).json({ error: "User context missing" });
+        const userid = user.id;
 
-		const user = await get_default_user();
-		if (!user) {
-			return res.status(500).json({ error: "Default user not found" });
-		}
-		const userid = user.id;
+        const sanitized = payload.map((item: any, index: number) => {
+            const rawName = String(item.name || "").trim();
+            
+            // Final check to prevent 'undefined' strings or empty names
+            if (!rawName || rawName.toLowerCase() === "undefined") {
+                throw new Error(`Row ${index + 1}: Service Name (URL) is missing.`);
+            }
 
-		const sanitized = payload.map((item: any, index: number) => {
-			if (!item || typeof item !== "object") {
-				throw new Error(`Item at index ${index} must be an object`);
-			}
+            return {
+                name: rawName,
+                username: item.username ? String(item.username).trim() : null,
+                userid: userid,
+                notes: null, // Hard-coded to null for safety
+                categories: []
+            };
+        });
 
-			if (typeof item.name !== "string" || item.name.trim() === "") {
-				throw new Error(
-					`Item at index ${index}: Field "name" is required and must be a non-empty string`,
-				);
-			}
-
-			const username = item.username ? String(item.username).trim() : undefined;
-
-			const noteValue = item.note || item.notes;
-			const notes = noteValue ? String(noteValue).trim() : undefined;
-
-			let categories: string[] = [];
-			if (item.categories) {
-				if (!Array.isArray(item.categories)) {
-					throw new Error(`Item at index ${index}: Field "categories" must be an array`);
-				}
-				const validEnumValues = ["GOOGLE"]; // Valid Categories enum values
-				categories = item.categories
-					.map((cat: any) => String(cat).toUpperCase())
-					.filter((cat: string) => validEnumValues.includes(cat));
-			}
-
-
-			return {
-				name: item.name.trim(),
-				username: username || undefined,
-				notes: notes || undefined,
-				categories,
-				userid,
-			};
-		});
-
-		req.sanitizedBody = sanitized;
-		next();
-	} catch (error) {
-		res.status(400).json({ error: (error as Error).message });
-	}
+        req.sanitizedBody = sanitized;
+        next();
+    } catch (error: any) {
+        res.status(400).json({ error: error.message });
+    }
 }
 
 router.route("/bulk").post(sanitizeAccount, async (req: any, res: any) => {
-	try {
-		const createMany = await prisma.account.createMany({
-			data: req.sanitizedBody,
-		});
-		res.status(200).json({ message: `Successfully created ${createMany} users.` });
-	} catch (error) {
-		console.error("Error creating users:", error);
-		res.status(500).json({ error: "An error occurred while creating users." });
-	}
+    try {
+        const result = await prisma.account.createMany({
+            data: req.sanitizedBody,
+            skipDuplicates: true
+        });
+        
+        res.status(200).json({ 
+            message: `Successfully created ${result.count} accounts.`,
+            count: result.count 
+        });
+    } catch (error) {
+        console.error("Error in bulk create:", error);
+        res.status(500).json({ error: "An error occurred while creating accounts." });
+    }
 });
 
 export default router;
