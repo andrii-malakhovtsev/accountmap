@@ -126,6 +126,8 @@ const About = () => {
 
               {/* DYNAMIC CONTACTS GRID - High Contrast Electric Blue */}
               <div className="flex flex-col gap-2 md:gap-3 mb-8 md:mb-10">
+                
+                {/* TOP ROW: PORTFOLIO & GITHUB */}
                 {(person.socials.website || person.socials.github) && (
                   <div className="flex flex-wrap gap-2">
                     {person.socials.website && (
@@ -145,6 +147,7 @@ const About = () => {
                   </div>
                 )}
 
+                {/* BOTTOM ROW: LINKEDIN, EMAIL, & DISCORD */}
                 <div className="flex gap-2">
                   {person.socials.linkedin && (
                     <a href={person.socials.linkedin} target="_blank" rel="noreferrer" className={`flex-1 text-center py-3 text-[9px] font-black transition-all rounded-sm border uppercase tracking-widest ${
@@ -153,6 +156,15 @@ const About = () => {
                       LinkedIn
                     </a>
                   )}
+
+                  {person.socials.email && (
+                    <a href={person.socials.email} className={`flex-1 text-center py-3 text-[9px] font-black transition-all rounded-sm border uppercase tracking-widest ${
+                      person.isLead ? 'border-yellow-500/20 text-yellow-600 hover:text-yellow-400' : 'border-blue-500/20 text-blue-500 hover:text-blue-300 hover:border-blue-500/50'
+                    }`}>
+                      Email
+                    </a>
+                  )}
+
                   {person.socials.discord && (
                     <div className="group/disc flex-1 relative">
                       <button className={`w-full text-center py-3 text-[9px] font-black transition-all rounded-sm border uppercase tracking-widest ${
