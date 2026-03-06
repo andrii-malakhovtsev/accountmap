@@ -63,12 +63,12 @@ const sanitizeAndNormalize = (data) => {
         return;
       }
 
-      console.log("Final payload for backend:", cleanedData);
-      await uploadBulkAccounts(cleanedData);
-      alert(`Success! Imported ${cleanedData.length} items.`);
+      const result = await uploadBulkAccounts(cleanedData);
+      const msg = result?.message ?? `Success! Imported ${result?.count ?? cleanedData.length} items.`;
+      alert(msg);
     } catch (error) {
       console.error("Upload failed:", error);
-      alert("Error parsing CSV.");
+      alert(error?.message || "Upload failed. Check format or account limit.");
     } finally {
       event.target.value = ""; 
     }

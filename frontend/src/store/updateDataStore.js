@@ -19,11 +19,14 @@ const updateDataStore = create((set) => ({
       if (!res.ok) {
         const msg = data.message || data.error || "Upload failed";
         set({ error: msg, loading: false });
-        return;
+        throw new Error(msg);
       }
       set({ accounts: data, loading: false });
+      return data;
     } catch (err) {
-      set({ error: "Failed to upload accounts", loading: false });
+      if (err.message) set({ error: err.message, loading: false });
+      else set({ error: "Failed to upload accounts", loading: false });
+      throw err;
     }
   },
 }));

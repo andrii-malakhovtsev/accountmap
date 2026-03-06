@@ -347,13 +347,14 @@ router.route("/bulk").post(sanitizeAccount, async (req: any, res: any) => {
         const user = await get_default_user();
         if (!user) return res.status(500).json({ error: "User context missing" });
 
-        const currentCount = await prisma.account.count({ where: { userid: user.id } });
+        const existingCount = await prisma.account.count({ where: { userid: user.id } });
         const toCreate = req.sanitizedBody as { name: string; username: string | null; userid: string; notes: null; categories: never[] }[];
-        const spaceLeft = Math.max(0, MAX_ACCOUNTS - currentCount);
+        // Limit by existing + created: only allow up to space left (not just batch size)
+        const spaceLeft = Math.max(0, MAX_ACCOUNTS - existingCount);
         if (spaceLeft === 0) {
             return res.status(403).json({
                 error: "Account limit reached",
-                message: `Maximum ${MAX_ACCOUNTS} accounts allowed to preserve the cheapest tier database.`,
+                message: `Maximum ${MAX_ACCOUNTS} accounts allowed to preserve the cheapest tier database. You have ${existingCount}.`,
                 limit: MAX_ACCOUNTS,
             });
         }
@@ -367,7 +368,7 @@ router.route("/bulk").post(sanitizeAccount, async (req: any, res: any) => {
         const skipped = toCreate.length - capped.length;
         res.status(200).json({
             message: `Successfully created ${result.count} accounts.` +
-                (skipped > 0 ? ` ${skipped} skipped (account limit).` : ""),
+                (skipped > 0 ? ` ${skipped} skipped (limit: ${existingCount} existing + ${result.count} new ≤ ${MAX_ACCOUNTS} to preserve cheapest tier database).` : ""),
             count: result.count,
             limit: MAX_ACCOUNTS,
         });
