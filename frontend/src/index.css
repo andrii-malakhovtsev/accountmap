@@ -24,3 +24,19 @@ body {
 *:focus {
   outline: none !important;
 }
+
+@keyframes credits-scroll {
+  /* Start fully below the viewport, then travel all the way past the top */
+  from {
+    transform: translate(-50%, 0);
+  }
+  to {
+    transform: translate(-50%, -220%);
+  }
+}
+
+.animate-credits-scroll {
+  animation: credits-scroll var(--credits-duration, 50s) linear infinite;
+  top: 100%;
+  bottom: auto;
+}

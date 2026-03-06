@@ -1,0 +1,22 @@
+ACCOUNTMAP
+———
+WHY ABOUT 50 SECONDS?
+———
+The back-end runs on a free Render.com tier.
+When nobody has used the app for a while, the server goes to sleep to save resources.
+Waking it up is like cold-starting a car: the host has to spin up a container, load the app, and connect to the database.
+That process usually takes around 50 seconds. Once it’s up, the app stays responsive until the next idle period.
+Thank you for your patience.
+———
+HOW TO USE THIS APP
+———
+MAP VIEW — See all connections and accounts as a graph. Click a node to open its details in the sidebar. Toggle 2D/3D in the header.
+LIST VIEW — Browse the same data in a list. Use the list link in the header to switch.
+ADD CONNECTION — Use the header button to add a new connection (person or company).
+ADD ACCOUNT — Use the header button to add an account and link it to a connection.
+SIDEBAR — Opens when you select a node or choose to add something. Edit details, link accounts, or close to return to the map.
+ABOUT — Use the About link at the bottom to meet the team and read the story behind the app.
+———
+We hope you enjoy mapping your accounts.
+———
+END

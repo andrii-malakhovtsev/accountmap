@@ -13,7 +13,8 @@ function AppContent() {
   const { users, fetchUsers } = useUserStore();
   const [entities, setEntities] = useState([]);
   const [healthStatus, setHealthStatus] = useState("waking");
-  
+  const [creditsLines, setCreditsLines] = useState([]);
+
   const location = useLocation();
   const isAboutPage = location.pathname === "/about";
 
@@ -41,6 +42,15 @@ function AppContent() {
     const interval = setInterval(checkRelay, 30000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (healthStatus !== "online") {
+      fetch("/credits.txt")
+        .then((r) => r.ok ? r.text() : Promise.reject())
+        .then((text) => setCreditsLines(text.split(/\r?\n/).filter(Boolean)))
+        .catch(() => setCreditsLines(["Waking Up Back-End Just For You! Takes about 50 seconds..."]));
+    }
+  }, [healthStatus]);
 
   useEffect(() => {
     fetchUsers();
@@ -100,13 +110,43 @@ function AppContent() {
 
       <main className="flex-1 relative bg-[#0a0a0a] overflow-hidden">
         {healthStatus !== "online" && !isAboutPage && (
-          <div className="absolute inset-0 z-[100] flex items-center justify-center pointer-events-none">
-            <div className="flex flex-col items-center gap-4 animate-in fade-in zoom-in duration-700">
+          <div className="absolute inset-0 z-[100] flex flex-col pointer-events-none overflow-hidden">
+            <div className="shrink-0 flex items-center justify-center py-4">
               <div className="flex items-center gap-3 px-6 py-3 bg-black/90 border border-white/10 rounded-full shadow-[0_0_50px_rgba(0,0,0,0.8)] backdrop-blur-md">
                 <div className="h-2 w-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_12px_rgba(239,68,68,0.8)]" />
                 <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300">
-                  Waking Up Back-End Just For You! Takes about 50 seconds...
+                  Waking up back-end just for you
                 </span>
+              </div>
+            </div>
+            <div className="flex-1 min-h-0 relative overflow-hidden">
+              {/* Top and bottom fades so credits feel like movie end-credits */}
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#0a0a0a] via-transparent to-transparent z-10" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent z-10" />
+              <div
+                className="animate-credits-scroll absolute left-1/2 w-full max-w-lg text-center text-gray-400 text-sm leading-relaxed"
+                style={{ "--credits-duration": "50s" }}
+              >
+                {creditsLines.length > 0 ? (
+                  <div className="flex flex-col gap-2 py-4">
+                    {creditsLines.map((line, i) => (
+                      <div
+                        key={i}
+                        className={
+                          /^———+$/.test(line.trim())
+                            ? "text-gray-600 text-xs tracking-widest py-1"
+                            : /^[A-Z\s]+$/.test(line) && line.length < 40
+                              ? "text-white/90 font-semibold tracking-wider uppercase text-base"
+                              : "text-gray-400"
+                        }
+                      >
+                        {line.trim() || "\u00A0"}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 animate-pulse">Loading…</div>
+                )}
               </div>
             </div>
           </div>
