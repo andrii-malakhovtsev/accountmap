@@ -161,13 +161,15 @@ package.json # Dependencies
 
 ![3D View](./public/screen.png)
 
-<img width="1395" height="829" alt="image" src="https://github.com/user-attachments/assets/a395df34-d07e-43a0-aaf2-912e9249d178" />
+<img width="1394" height="827" alt="image" src="https://github.com/user-attachments/assets/17b2a361-8ef5-4d73-8771-2132351d60cd" />
+
 
 ### 2D View
 
 ![2D View](./public/2d.png)
 
-<img width="1396" height="746" alt="image" src="https://github.com/user-attachments/assets/aa084441-1a48-474e-92f1-6f36ecb91ac3" />
+<img width="1397" height="828" alt="image" src="https://github.com/user-attachments/assets/0a141de9-ca48-42a5-a311-0a21c10be8f3" />
+
 
 ### List Connections View
 
