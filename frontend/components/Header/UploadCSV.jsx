@@ -80,7 +80,12 @@ const sanitizeAndNormalize = (data) => {
         onClick={() => fileInputRef.current?.click()}
         icon={SeriousIcons.Upload}
         label="Upload CSV"
-        subtext="Safe upload: Passwords are auto-deleted (REMEMBER: DEMO VERSION SHARES THE SAME ACCOUNT FOR EVERYONE ON THE WEB, DON'T UPLOAD CSV WITH YOUR REAL DATA)"
+        subtext={
+          <>
+            <span className="text-slate-500">Safe upload: Passwords are auto-deleted. </span>
+            <span className="text-amber-400 font-semibold">Demo shares one account for everyone — don&apos;t upload real data.</span>
+          </>
+        }
         colorClass="bg-white/5 hover:bg-white/10"
         iconColor="text-slate-400"
       />
