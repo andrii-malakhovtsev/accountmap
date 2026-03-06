@@ -10,6 +10,7 @@ Thank you for your patience.
 ———
 HOW TO USE THIS APP
 ———
+TURN OFF ADBLOCKERS FOR PROPER WORK
 MAP VIEW — See all connections and accounts as a graph. Click a node to open its details in the sidebar. Toggle 2D/3D in the header.
 LIST VIEW — Browse the same data in a list. Use the list link in the header to switch.
 ADD CONNECTION — Use the header button to add a new connection (person or company).
