@@ -13,19 +13,32 @@ const ListView = ({ entities, onSelectAccount, selectedId }) => {
   return (
     <div className="w-full h-full overflow-y-auto p-8 bg-[#0a0a0a] custom-scrollbar">
       <div className="max-w-5xl mx-auto space-y-6">
-        {/* Toggle UI */}
-        <div className="flex gap-2 p-1 bg-white/5 rounded-xl w-fit border border-white/10">
-          <button 
+        {/* Connections / Accounts toggle - original look with sliding pill animation */}
+        <div className="relative flex gap-2 p-1 bg-white/5 rounded-xl w-fit border border-white/10">
+          <div
+            className="absolute top-1 bottom-1 rounded-lg bg-blue-600 shadow-lg transition-all duration-300 ease-out"
+            style={{
+              left: activeTab === 'accounts' ? 'calc(50% + 4px)' : '4px',
+              width: 'calc(50% - 6px)',
+            }}
+          />
+          <button
+            type="button"
             onClick={() => setActiveTab('connections')}
-            className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'connections' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+            className="relative z-10 flex-1 py-2 px-6 text-[10px] font-black uppercase tracking-widest transition-colors rounded-lg min-w-0 whitespace-nowrap cursor-pointer"
           >
-            Connections ({entities.length})
+            <span className={activeTab === 'connections' ? 'text-white' : 'text-gray-500 hover:text-white'}>
+              Connections ({entities.length})
+            </span>
           </button>
-          <button 
+          <button
+            type="button"
             onClick={() => setActiveTab('accounts')}
-            className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'accounts' ? 'bg-blue-600 text-white shadow-lg' : 'text-gray-500 hover:text-white'}`}
+            className="relative z-10 flex-1 py-2 px-6 text-[10px] font-black uppercase tracking-widest transition-colors rounded-lg min-w-0 whitespace-nowrap cursor-pointer"
           >
-            Accounts ({accounts.length})
+            <span className={activeTab === 'accounts' ? 'text-white' : 'text-gray-500 hover:text-white'}>
+              Accounts ({accounts.length})
+            </span>
           </button>
         </div>
 

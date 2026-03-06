@@ -6,7 +6,7 @@ import * as THREE from "three";
 import SpriteText from "three-spritetext";
 import { loadImage } from "./../utilities/iconService";
 
-const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId, is3D }) => {
+const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId, is3D, onToggle3D }) => {
   const [iconCache, setIconCache] = useState({});
   const fgRef = useRef();
   const isMobile = useMemo(() => window.innerWidth < 768, []);
@@ -117,7 +117,15 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId, is3D }) 
 
   return (
     <div id="graph-container" className="w-full h-full relative bg-[#0a0a0a] overflow-hidden">
-      
+      {onToggle3D && (
+        <button
+          type="button"
+          onClick={onToggle3D}
+          className="absolute top-4 left-4 z-[100] bg-blue-600 border border-white/20 text-white px-3 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-wider hover:bg-blue-500 active:scale-95 transition-all"
+        >
+          → {is3D ? "2D" : "3D"}
+        </button>
+      )}
       <button 
         onClick={handleCenter}
         className="absolute bottom-6 right-6 z-[100] bg-blue-600 border border-white/20 text-white p-4 rounded-full shadow-lg active:scale-90 transition-all"

@@ -148,7 +148,7 @@ const Sidebar = ({
 
   return (
     <aside
-      className={`fixed md:absolute right-0 top-0 md:top-20 bottom-0 w-full md:w-80 bg-[#0f0f0f]/98 md:bg-[#0f0f0f]/95 backdrop-blur-2xl border-l border-white/10 flex flex-col z-[2000] md:z-[1000] transition-all duration-300 transform 
+      className={`fixed md:absolute right-0 top-0 md:top-20 bottom-0 w-full md:w-80 bg-[#0f0f0f]/98 md:bg-[#0f0f0f]/95 backdrop-blur-2xl border-l border-white/10 flex flex-col z-[2000] md:z-[1500] transition-all duration-300 transform 
         ${isOpen ? "translate-x-0 opacity-100" : "translate-x-full opacity-0 pointer-events-none"}`}
     >
       <div className="flex items-center justify-between px-6 py-4 md:hidden border-b border-white/5">
