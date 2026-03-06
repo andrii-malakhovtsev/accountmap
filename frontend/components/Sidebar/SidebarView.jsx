@@ -1,6 +1,9 @@
 import React from 'react';
 import { getIconUrl } from './../../src/utilities/iconService';
 
+const isDummyConnection = (conn) =>
+  !!conn.accounts && (!conn.type || !conn.value || String(conn.type).toLowerCase() === 'dummy');
+
 const SidebarView = ({ selectedAccount, connections, onSelectAccount, onStartLink }) => {
   const isMainNodeConnection = !!selectedAccount?.accounts;
   const linkLabel = isMainNodeConnection ? "Link to Account" : "Link to Connection";
@@ -48,7 +51,7 @@ const SidebarView = ({ selectedAccount, connections, onSelectAccount, onStartLin
         <div className="flex flex-col gap-2">
           {connections.map((item) => {
             const isItemConnection = !!item.accounts;
-            const iconKey = isItemConnection ? item.type : item.name;
+            const iconKey = isItemConnection ? (isDummyConnection(item) ? 'dummy' : item.type) : item.name;
 
             return (
               <div 
@@ -61,10 +64,10 @@ const SidebarView = ({ selectedAccount, connections, onSelectAccount, onStartLin
                 </div>
                 <div className="flex flex-col overflow-hidden">
                   <span className="text-[11px] text-gray-200 font-bold truncate uppercase tracking-tight">
-                    {item.name || item.type}
+                    {isItemConnection && isDummyConnection(item) ? 'No connection' : (item.name || item.type)}
                   </span>
                   <span className="text-[9px] text-gray-500 font-mono truncate lowercase">
-                    {isItemConnection ? item.value : item.username}
+                    {isItemConnection ? (isDummyConnection(item) ? 'No connection' : item.value) : item.username}
                   </span>
                 </div>
               </div>

@@ -1,6 +1,7 @@
 // Generic icons by category (Flaticon CDN) – used when no brand match
 const ICONS = {
   generic: 'https://cdn-icons-png.flaticon.com/512/633/633600.png',
+  dummy: 'https://cdn-icons-png.flaticon.com/512/10833/10833652.png', // unlink / no connection
   user: 'https://cdn-icons-png.flaticon.com/512/1077/1077114.png',
   link: 'https://cdn-icons-png.flaticon.com/512/3097/3097180.png',
   mail: 'https://cdn-icons-png.flaticon.com/512/5610/5610944.png',
@@ -162,6 +163,9 @@ function domainForFavicon(name) {
 export function getIconCandidates(name) {
   if (!name || typeof name !== 'string' || name === 'Select an Account') {
     return [GENERIC_ICON];
+  }
+  if (normalizeKey(name) === 'dummy') {
+    return [ICONS.dummy, GENERIC_ICON];
   }
 
   const candidates = [];

@@ -6,6 +6,9 @@ import * as THREE from "three";
 import SpriteText from "three-spritetext";
 import { loadImage } from "./../utilities/iconService";
 
+const isDummyConnection = (node) =>
+  !!node.accounts && (!node.type || !node.value || String(node.type).toLowerCase() === 'dummy');
+
 const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId, is3D, onToggle3D }) => {
   const [iconCache, setIconCache] = useState({});
   const fgRef = useRef();
@@ -19,7 +22,8 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId, is3D, on
       for (const node of nodes) {
         if (!iconCache[node.id]) {
           try {
-            const iconKey = node.accounts ? node.type : node.name;
+            const isConn = !!node.accounts;
+            const iconKey = isConn ? (isDummyConnection(node) ? 'dummy' : node.type) : node.name;
             const img = await loadImage(iconKey);
             if (img && img.width > 0) updates[node.id] = img;
           } catch (e) {}
@@ -103,7 +107,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId, is3D, on
       group.add(sprite);
     }
 
-    const labelText = (isConn ? node.type : node.name).toUpperCase();
+    const labelText = (isConn ? (isDummyConnection(node) ? 'No connection' : (node.type || '')) : (node.name || '')).toUpperCase();
     const label = new SpriteText(labelText);
     label.color = isSelected ? "#3b82f6" : (isConn ? "#60a5fa" : "#9ca3af");
     label.textHeight = isMobile ? 4 : 3; 
@@ -180,7 +184,7 @@ const MapView = ({ nodes = [], links = [], onSelectAccount, selectedId, is3D, on
               ctx.drawImage(img, node.x - iconSize, node.y - iconSize, iconSize * 2, iconSize * 2);
             }
 
-            const label = (isConn ? node.type : node.name || "").toUpperCase();
+            const label = (isConn ? (isDummyConnection(node) ? 'No connection' : (node.type || '')) : (node.name || '')).toUpperCase();
             
             // SMALLER TEXT & CONDITIONAL SHOWING ON MOBILE
             if (globalScale > 0.75 || isSelected) {
